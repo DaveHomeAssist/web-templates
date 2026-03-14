@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prompt Engineering Techniques</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0c0c0c;
+      --surface: #141414;
+      --surface-2: #1c1c1c;
+      --text: #e8e4dc;
+      --muted: #7a7570;
+      --line: #282828;
+      --accent: #c8ff00;
+      --accent-dim: rgba(200,255,0,.08);
+      --orange: #ff6b35;
+      --blue: #4fc3f7;
+      --purple: #b39ddb;
+      --text-soft: #a09890;
+      --text-faint: #5a5550;
+      --radius: 6px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+    body[data-theme="signal-red"] {
+      --bg: #110d10;
+      --surface: #191215;
+      --surface-2: #24191d;
+      --text: #f4e7e9;
+      --muted: #b19197;
+      --line: #3a252b;
+      --accent: #ff6b6b;
+      --accent-dim: rgba(255,107,107,.08);
+      --orange: #ffb454;
+      --blue: #7dd3fc;
+      --purple: #f0abfc;
+      --text-soft: #c2a7ac;
+      --text-faint: #75555d;
+    }
+    body[data-theme="glacier"] {
+      --bg: #09131a;
+      --surface: #101d26;
+      --surface-2: #162733;
+      --text: #e8f5ff;
+      --muted: #809baa;
+      --line: #223746;
+      --accent: #59d7ff;
+      --accent-dim: rgba(89,215,255,.08);
+      --orange: #ffa657;
+      --blue: #91e6ff;
+      --purple: #9f8cff;
+      --text-soft: #9cb6c6;
+      --text-faint: #5c7382;
+    }
+    .wrap { max-width: 1340px; margin: 0 auto; padding: 36px 28px; }
+    .theme-switcher {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: 0 14px 30px rgba(0,0,0,.18);
+    }
+    .theme-switcher label {
+      font-family: 'DM Mono', monospace;
+      font-size: .64rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .theme-switcher select {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font-family: 'DM Mono', monospace;
+      font-size: .82rem;
+    }
+    .theme-switcher select:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    .theme-switcher option { background: var(--surface); }
+
+    .hero {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 28px;
+      margin-bottom: 28px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 24px;
+    }
+    .hero-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: .72rem;
+      letter-spacing: .18em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+      font-weight: 500;
+      line-height: 1.1;
+      letter-spacing: -.02em;
+      color: var(--text);
+    }
+    .hero-sub {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: .92rem;
+      font-weight: 300;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+    .hero-meta {
+      text-align: right;
+    }
+    .hero-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 3rem;
+      font-weight: 500;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .hero-count-label {
+      font-size: .75rem;
+      color: var(--muted);
+      letter-spacing: .1em;
+      margin-top: 4px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .ctrl {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+    }
+    .ctrl label {
+      display: block;
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .ctrl input, .ctrl select {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: .88rem;
+      padding: 0;
+    }
+    .ctrl input:focus-visible, .ctrl select:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .ctrl select option { background: #1c1c1c; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .table-outer {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: auto;
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 700px; }
+    thead tr { border-bottom: 1px solid #333; }
+    th {
+      font-family: 'DM Mono', monospace;
+      font-size: .68rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 12px 16px;
+      text-align: left;
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      font-size: .88rem;
+      line-height: 1.5;
+      vertical-align: top;
+    }
+    tbody tr:hover td { background: rgba(255,255,255,.02); }
+    .technique-name {
+      font-family: 'DM Mono', monospace;
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-family: 'DM Mono', monospace;
+      font-size: .68rem;
+      font-weight: 500;
+      letter-spacing: .04em;
+      white-space: nowrap;
+      margin-top: 5px;
+    }
+    .tag-structure { background: rgba(200,255,0,.1); color: #c8ff00; border: 1px solid rgba(200,255,0,.2); }
+    .tag-reasoning { background: rgba(76,195,247,.1); color: #4fc3f7; border: 1px solid rgba(76,195,247,.2); }
+    .tag-output { background: rgba(255,107,53,.1); color: #ff6b35; border: 1px solid rgba(255,107,53,.2); }
+    .tag-context { background: rgba(179,157,219,.1); color: #b39ddb; border: 1px solid rgba(179,157,219,.2); }
+
+    .sidebar { display: grid; gap: 12px; }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .panel-title {
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .panel p { font-size: .86rem; color: var(--muted); line-height: 1.65; }
+    .panel p + p { margin-top: 10px; }
+    .panel strong { color: var(--text); font-weight: 600; }
+
+    .legend-grid { display: grid; gap: 8px; }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: .83rem;
+      color: var(--muted);
+    }
+
+    .tip-list { display: grid; gap: 10px; }
+    .tip {
+      padding: 12px;
+      background: var(--surface-2);
+      border-left: 2px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+    }
+    .tip-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .72rem;
+      color: var(--accent);
+      letter-spacing: .08em;
+      margin-bottom: 4px;
+    }
+    .tip p { font-size: .82rem; color: var(--muted); line-height: 1.5; }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .stat {
+      background: var(--surface-2);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+    }
+    .stat-n {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .stat-label { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+
+    @media (max-width: 1060px) {
+      .layout { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: 1fr 1fr; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-meta { text-align: left; }
+    }
+    @media (max-width: 700px) {
+      .theme-switcher {
+        position: static;
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        border-radius: var(--radius);
+      }
+    }
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <div class="theme-switcher">
+    <label for="themeSelect">Scheme</label>
+    <select id="themeSelect" aria-label="Select color scheme">
+      <option value="default">Terminal Lime</option>
+      <option value="signal-red">Signal Red</option>
+      <option value="glacier">Glacier</option>
+    </select>
+  </div>
+
+  <header class="hero">
+    <div>
+      <div class="hero-eyebrow">PromptRefinery Reference</div>
+      <h1>Prompt Engineering<br>Technique Map</h1>
+      <p class="hero-sub">A structured index of prompting patterns, their use cases, complexity cost, and model compatibility — from basic instruction shaping to advanced agentic chains.</p>
+    </div>
+    <div class="hero-meta">
+      <div class="hero-count" id="countDisplay">18</div>
+      <div class="hero-count-label">techniques indexed</div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="ctrl">
+      <label for="search">Search technique or keyword</label>
+      <input id="search" type="text" placeholder="chain-of-thought, XML, role, format..." />
+    </div>
+    <div class="ctrl">
+      <label for="catFilter">Category</label>
+      <select id="catFilter">
+        <option value="all">All categories</option>
+        <option value="Structure">Structure</option>
+        <option value="Reasoning">Reasoning</option>
+        <option value="Output">Output</option>
+        <option value="Context">Context</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <label for="costFilter">Complexity cost</label>
+      <select id="costFilter">
+        <option value="all">All levels</option>
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <label for="useFilter">Best for</label>
+      <select id="useFilter">
+        <option value="all">All use cases</option>
+        <option value="Extraction">Extraction</option>
+        <option value="Generation">Generation</option>
+        <option value="Analysis">Analysis</option>
+        <option value="Agents">Agents</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="layout">
+    <section class="table-outer" aria-label="Technique table">
+      <table>
+        <thead>
+          <tr>
+            <th>Technique</th>
+            <th>What it does</th>
+            <th>When to use</th>
+            <th>Token cost</th>
+            <th>Works best with</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </section>
+
+    <aside class="sidebar">
+      <div class="panel">
+        <div class="panel-title">By the numbers</div>
+        <div class="stat-row">
+          <div class="stat"><div class="stat-n">4</div><div class="stat-label">categories</div></div>
+          <div class="stat"><div class="stat-n">18</div><div class="stat-label">techniques</div></div>
+          <div class="stat"><div class="stat-n">3</div><div class="stat-label">cost tiers</div></div>
+          <div class="stat"><div class="stat-n">4</div><div class="stat-label">use case types</div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Categories</div>
+        <div class="legend-grid">
+          <div class="legend-item"><span class="tag tag-structure">Structure</span> Prompt format & shape</div>
+          <div class="legend-item"><span class="tag tag-reasoning">Reasoning</span> Step-by-step logic</div>
+          <div class="legend-item"><span class="tag tag-output">Output</span> Response formatting</div>
+          <div class="legend-item"><span class="tag tag-context">Context</span> Role and memory injection</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Core principles</div>
+        <div class="tip-list">
+          <div class="tip">
+            <div class="tip-label">01 / Specificity</div>
+            <p>Vague instructions produce vague results. Every word in a prompt spends tokens — spend them on constraints, not filler.</p>
+          </div>
+          <div class="tip">
+            <div class="tip-label">02 / Positive framing</div>
+            <p>Tell the model what to do, not just what to avoid. Negative instructions alone leave too much open to interpretation.</p>
+          </div>
+          <div class="tip">
+            <div class="tip-label">03 / Separation</div>
+            <p>Use XML tags or clear delimiters to separate instructions, context, and examples — especially in long prompts.</p>
+          </div>
+          <div class="tip">
+            <div class="tip-label">04 / Prefill</div>
+            <p>Starting the assistant turn with a partial response steers format and tone more reliably than instructing it at the top.</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+</main>
+<script>
+  const rows = [
+    { name: 'Zero-shot instruction', cat: 'Structure', cost: 'Low', use: 'Generation', desc: 'Plain natural language task with no examples. Relies on model\'s training for interpretation.', when: 'Simple, well-defined tasks where format and style are unambiguous.', compat: 'All models' },
+    { name: 'Few-shot examples', cat: 'Structure', cost: 'Medium', use: 'Extraction', desc: 'Provide 2–5 worked examples before the task to demonstrate expected input/output patterns.', when: 'Format-sensitive tasks, tone matching, classification, or uncommon output shapes.', compat: 'All models' },
+    { name: 'Chain-of-thought (CoT)', cat: 'Reasoning', cost: 'Medium', use: 'Analysis', desc: 'Ask the model to reason step by step before producing the final answer.', when: 'Multi-step problems, math, logic, or any task where intermediate reasoning matters.', compat: 'Claude 3+, GPT-4' },
+    { name: 'XML tag structure', cat: 'Structure', cost: 'Low', use: 'Extraction', desc: 'Wrap prompt sections (context, task, examples, output) in semantic XML tags.', when: 'Long prompts, multi-part instructions, or when mixing system and user content.', compat: 'Claude (optimized)' },
+    { name: 'Role prompting', cat: 'Context', cost: 'Low', use: 'Generation', desc: 'Open the system prompt by defining an identity, expertise, and behavioral frame.', when: 'When tone, domain authority, or persona consistency across turns is needed.', compat: 'All models' },
+    { name: 'Assistant prefill', cat: 'Output', cost: 'Low', use: 'Generation', desc: 'Pre-populate the beginning of the assistant\'s response to steer format, tone, or structure.', when: 'Force JSON opening, markdown format, or specific first words.', compat: 'Claude API only' },
+    { name: 'ReAct pattern', cat: 'Reasoning', cost: 'High', use: 'Agents', desc: 'Interleave Reasoning steps with Action calls in a loop until task completion.', when: 'Agentic workflows with tool use where planning must adapt to tool output.', compat: 'Claude 3+, GPT-4' },
+    { name: 'Scratchpad / thinking', cat: 'Reasoning', cost: 'High', use: 'Analysis', desc: 'Allocate a private reasoning block before the public response.', when: 'Complex decisions where showing work would distract from the final answer.', compat: 'Claude (extended thinking)' },
+    { name: 'Negative examples', cat: 'Structure', cost: 'Low', use: 'Generation', desc: 'Show examples of undesired output alongside desired output.', when: 'When the model keeps drifting toward a specific bad pattern despite positive instructions.', compat: 'All models' },
+    { name: 'Output schema injection', cat: 'Output', cost: 'Low', use: 'Extraction', desc: 'Include a JSON or structured schema the model must match exactly in its response.', when: 'Downstream parsing, API integration, or any programmatic consumption of output.', compat: 'All models' },
+    { name: 'Instruction hierarchy', cat: 'Context', cost: 'Low', use: 'Agents', desc: 'Explicitly state which instructions take precedence when conflicts arise.', when: 'Multi-turn agents, operator + user permission separation, tool use pipelines.', compat: 'Claude (native support)' },
+    { name: 'Step-back prompting', cat: 'Reasoning', cost: 'Medium', use: 'Analysis', desc: 'Ask the model to first answer a more abstract version of the problem, then apply that to the specific case.', when: 'Narrow questions that benefit from broader context before drilling in.', compat: 'Claude 3+, GPT-4' },
+    { name: 'Decomposition', cat: 'Reasoning', cost: 'Medium', use: 'Agents', desc: 'Explicitly break a complex task into numbered subtasks within the prompt.', when: 'Long-horizon tasks where intermediate results must feed downstream steps.', compat: 'All models' },
+    { name: 'Grounding injection', cat: 'Context', cost: 'Medium', use: 'Analysis', desc: 'Insert retrieved documents, data, or evidence before the instruction.', when: 'RAG pipelines, fact-grounded Q&A, or reducing hallucination on domain specifics.', compat: 'All models (context-window limited)' },
+    { name: 'Tone mirroring', cat: 'Context', cost: 'Low', use: 'Generation', desc: 'Provide a reference sample of the desired voice and instruct the model to match it.', when: 'Brand voice, editorial style, persona-consistent writing across documents.', compat: 'All models' },
+    { name: 'Self-critique loop', cat: 'Reasoning', cost: 'High', use: 'Analysis', desc: 'After initial response, prompt the model to critique its own output, then revise.', when: 'High-stakes outputs where a second pass materially improves quality.', compat: 'Claude 3+, GPT-4' },
+    { name: 'Conditional branching', cat: 'Structure', cost: 'Medium', use: 'Agents', desc: 'Embed if/then logic in the prompt so the model routes to different behaviors based on detected input type.', when: 'Classifier + responder fusion, multi-intent routing in a single prompt.', compat: 'Claude 3+, GPT-4' },
+    { name: 'Persona chaining', cat: 'Context', cost: 'High', use: 'Generation', desc: 'Run the same content through multiple specialist personas sequentially, feeding each output as input.', when: 'Complex documents requiring diverse expert review: technical, legal, editorial.', compat: 'Claude 3+ (long context)' },
+  ];
+
+  const body = document.getElementById('tableBody');
+  const search = document.getElementById('search');
+  const catFilter = document.getElementById('catFilter');
+  const costFilter = document.getElementById('costFilter');
+  const useFilter = document.getElementById('useFilter');
+  const countDisplay = document.getElementById('countDisplay');
+
+  const tagClass = { Structure: 'tag-structure', Reasoning: 'tag-reasoning', Output: 'tag-output', Context: 'tag-context' };
+  const costColor = { Low: 'var(--blue)', Medium: 'var(--orange)', High: 'var(--purple)' };
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch]));
+  }
+
+  function render() {
+    const q = search.value.trim().toLowerCase();
+    const cat = catFilter.value;
+    const cost = costFilter.value;
+    const use = useFilter.value;
+
+    const filtered = rows.filter(r => {
+      const hay = [r.name, r.cat, r.cost, r.use, r.desc, r.when, r.compat].join(' ').toLowerCase();
+      return (!q || hay.includes(q)) &&
+             (cat === 'all' || r.cat === cat) &&
+             (cost === 'all' || r.cost === cost) &&
+             (use === 'all' || r.use === use);
+    });
+
+    countDisplay.textContent = filtered.length;
+
+    body.innerHTML = filtered.map(r => `
+      <tr>
+        <td>
+          <div class="technique-name">${escapeHtml(r.name)}</div>
+          <span class="tag ${tagClass[r.cat]}">${escapeHtml(r.cat)}</span>
+        </td>
+        <td style="color:var(--text-soft);font-size:.84rem">${escapeHtml(r.desc)}</td>
+        <td style="color:var(--text-soft);font-size:.84rem">${escapeHtml(r.when)}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:.78rem;color:${costColor[r.cost]}">${escapeHtml(r.cost)}</td>
+        <td style="font-family:'DM Mono',monospace;font-size:.76rem;color:var(--text-faint)">${escapeHtml(r.compat)}</td>
+      </tr>
+    `).join('') || `<tr><td colspan="5" style="padding:24px 16px;color:var(--text-faint);font-family:'DM Mono',monospace;font-size:.82rem">No techniques match. Try broader filters.</td></tr>`;
+  }
+
+  search.addEventListener('input', render);
+  catFilter.addEventListener('change', render);
+  costFilter.addEventListener('change', render);
+  useFilter.addEventListener('change', render);
+  render();
+
+  (() => {
+    const select = document.getElementById('themeSelect');
+    const storageKey = `layout-theme:${location.pathname.split('/').pop() || 'prompt_engineering_ref.html'}`;
+
+    function applyTheme(value) {
+      if (value && value !== 'default') {
+        document.body.dataset.theme = value;
+      } else {
+        document.body.removeAttribute('data-theme');
+      }
+      select.value = value || 'default';
+    }
+
+    applyTheme(localStorage.getItem(storageKey) || 'default');
+
+    select.addEventListener('change', (event) => {
+      const value = event.target.value;
+      localStorage.setItem(storageKey, value);
+      applyTheme(value);
+      render();
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reference Layout Pack</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface-2: #1a1a1a;
+      --text: #f0f0f0;
+      --muted: #707070;
+      --line: #222222;
+      --accent: #ff3d00;
+      --accent-dim: rgba(255,61,0,.1);
+      --accent-line: rgba(255,61,0,.2);
+      --card-hover-border: #444444;
+      --card-num-hover: #333333;
+      --radius: 4px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    body[data-theme="sandstone"] {
+      --bg: #f1eadf;
+      --surface: #fff7ec;
+      --surface-2: #ebdfd1;
+      --text: #2d2218;
+      --muted: #7d6854;
+      --line: #dac6b1;
+      --accent: #c6662a;
+      --accent-dim: rgba(198,102,42,.1);
+      --accent-line: rgba(198,102,42,.2);
+      --card-hover-border: #b79070;
+      --card-num-hover: #baa896;
+    }
+    body[data-theme="signal-blue"] {
+      --bg: #07131f;
+      --surface: #0d1d2d;
+      --surface-2: #132844;
+      --text: #edf8ff;
+      --muted: #819cb5;
+      --line: #1f3852;
+      --accent: #33d1ff;
+      --accent-dim: rgba(51,209,255,.1);
+      --accent-line: rgba(51,209,255,.2);
+      --card-hover-border: #3c7086;
+      --card-num-hover: #24465d;
+    }
+    .wrap { max-width: 1360px; margin: 0 auto; padding: 48px 28px 80px; }
+    .theme-switcher {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: 0 14px 30px rgba(0,0,0,.18);
+    }
+    .theme-switcher label {
+      font-size: .64rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .theme-switcher select {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font: inherit;
+      font-size: .84rem;
+    }
+    .theme-switcher select:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    .theme-switcher option { background: var(--surface); }
+
+    .masthead {
+      margin-bottom: 56px;
+    }
+    .pack-label {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .pack-label-text {
+      font-size: .72rem;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .pack-label-line {
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+    .pack-label-num {
+      font-size: .72rem;
+      letter-spacing: .14em;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 10vw, 9rem);
+      line-height: .9;
+      letter-spacing: .02em;
+      color: var(--text);
+    }
+    h1 span { color: var(--accent); }
+
+    .tagline {
+      font-size: 1rem;
+      color: var(--muted);
+      font-weight: 300;
+      margin-top: 20px;
+      max-width: 680px;
+      line-height: 1.7;
+    }
+    .tagline strong { color: var(--text); font-weight: 500; }
+
+    .meta-row {
+      display: flex;
+      gap: 32px;
+      margin-top: 28px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+    .meta-item {}
+    .meta-n { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; color: var(--accent); line-height: 1; }
+    .meta-l { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: .72rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .section-line { flex: 1; height: 1px; background: var(--line); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+
+    .layout-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-decoration: none;
+      color: var(--text);
+      display: block;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .15s, background .15s;
+    }
+    .layout-card:hover { border-color: var(--card-hover-border); background: var(--surface-2); }
+    .layout-card:hover .card-arrow { opacity: 1; transform: translate(0,0); }
+    .layout-card:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .layout-card-disabled {
+      opacity: .4;
+      cursor: default;
+    }
+
+    .card-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3.5rem;
+      line-height: 1;
+      color: var(--line);
+      margin-bottom: 16px;
+      transition: color .15s;
+    }
+    .layout-card:hover .card-num { color: var(--card-num-hover); }
+
+    .card-type {
+      font-size: .68rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+    .card-desc {
+      font-size: .82rem;
+      color: var(--muted);
+      line-height: 1.6;
+      font-weight: 300;
+    }
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+    .ctag {
+      font-size: .64rem;
+      padding: 2px 8px;
+      border-radius: 2px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      letter-spacing: .04em;
+    }
+    .card-arrow {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      font-size: .9rem;
+      color: var(--accent);
+      opacity: 0;
+      transform: translate(-4px, 4px);
+      transition: opacity .15s, transform .15s;
+    }
+
+    .existing-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      font-size: .62rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid var(--accent-line);
+      border-radius: 2px;
+    }
+
+    .bottom-note {
+      padding: 20px 24px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    .note-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .note-text { font-size: .88rem; color: var(--muted); line-height: 1.6; }
+    .note-text strong { color: var(--text); }
+
+    @media (max-width: 1100px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 700px) {
+      .theme-switcher {
+        position: static;
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        border-radius: var(--radius);
+      }
+    }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .meta-row { gap: 20px; } }
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <div class="theme-switcher">
+    <label for="themeSelect">Scheme</label>
+    <select id="themeSelect" aria-label="Select color scheme">
+      <option value="default">Original</option>
+      <option value="sandstone">Sandstone</option>
+      <option value="signal-blue">Signal Blue</option>
+    </select>
+  </div>
+
+  <header class="masthead">
+    <div class="pack-label">
+      <span class="pack-label-text">Reference Layout Pack</span>
+      <span class="pack-label-line"></span>
+      <span class="pack-label-num">v1.0 — 2026</span>
+    </div>
+    <h1>8 <span>Layout</span><br>Patterns</h1>
+    <p class="tagline">A production-ready collection of <strong>filterable reference interfaces</strong> — each with a distinct aesthetic, live-filtering controls, and contextual sidebar panels. Copy, adapt, and deploy.</p>
+    <div class="meta-row">
+      <div class="meta-item"><div class="meta-n">8</div><div class="meta-l">layout types</div></div>
+      <div class="meta-item"><div class="meta-n">8</div><div class="meta-l">distinct aesthetics</div></div>
+      <div class="meta-item"><div class="meta-n">0</div><div class="meta-l">js deps</div></div>
+      <div class="meta-item"><div class="meta-n">∞</div><div class="meta-l">use cases</div></div>
+    </div>
+  </header>
+
+  <div class="section-head">
+    <span class="section-title">All layouts</span>
+    <span class="section-line"></span>
+  </div>
+
+  <div class="grid">
+
+    <a href="prompt_engineering_ref.html" class="layout-card">
+      <div class="existing-badge">Built</div>
+      <div class="card-num">01</div>
+      <div class="card-type">Filterable Reference Table</div>
+      <div class="card-title">Prompt Engineering Technique Map</div>
+      <div class="card-desc">Searchable index of 18 prompting patterns with category, token cost, and model compatibility filters. Dark monospace editorial aesthetic.</div>
+      <div class="card-tags">
+        <span class="ctag">Table</span>
+        <span class="ctag">Search + filters</span>
+        <span class="ctag">Sidebar panels</span>
+        <span class="ctag">Dark / mono</span>
+      </div>
+    </a>
+
+    <a href="live_event_gear_map.html" class="layout-card">
+      <div class="existing-badge">Built</div>
+      <div class="card-num">02</div>
+      <div class="card-type">Field Guide</div>
+      <div class="card-title">Live Event Production Gear Map</div>
+      <div class="card-desc">Department-sorted gear reference with signal chain positions, failure modes, and criticality tiers. Warm amber editorial magazine aesthetic.</div>
+      <div class="card-tags">
+        <span class="ctag">Table</span>
+        <span class="ctag">4-column filter</span>
+        <span class="ctag">Field notes sidebar</span>
+        <span class="ctag">Dark / warm</span>
+      </div>
+    </a>
+
+    <a href="home_automation_map.html" class="layout-card">
+      <div class="existing-badge">Built</div>
+      <div class="card-num">03</div>
+      <div class="card-type">Capability Comparison Map</div>
+      <div class="card-title">Home Automation Platform Map</div>
+      <div class="card-desc">Head-to-head feature comparison with live filtering, scored bar charts, and protocol support panel. Steel blue precision instrument aesthetic.</div>
+      <div class="card-tags">
+        <span class="ctag">Comparison table</span>
+        <span class="ctag">Score bars</span>
+        <span class="ctag">Protocol sidebar</span>
+        <span class="ctag">Dark / blue</span>
+      </div>
+    </a>
+
+    <a href="layout_decision_matrix.html" class="layout-card">
+      <div class="existing-badge">Built</div>
+      <div class="card-num">04</div>
+      <div class="card-type">Decision Matrix</div>
+      <div class="card-title">Weighted Decision Scoring Matrix</div>
+      <div class="card-desc">Real-time weighted scoring across multiple options and criteria. Drag sliders to reweight criteria and watch the winner update live. Cream and ink editorial aesthetic.</div>
+      <div class="card-tags">
+        <span class="ctag">Matrix grid</span>
+        <span class="ctag">Live sliders</span>
+        <span class="ctag">Auto winner</span>
+        <span class="ctag">Light / editorial</span>
+      </div>
+    </a>
+
+    <a href="layout_phase_roadmap.html" class="layout-card">
+      <div class="existing-badge">Built</div>
+      <div class="card-num">05</div>
+      <div class="card-type">Timeline / Phase Roadmap</div>
+      <div class="card-title">Project Phase Roadmap</div>
+      <div class="card-desc">Expandable phase blocks with task-level detail, owner, effort, and status. Filter by phase status. Progress bar per phase and overall percentage. Forest green geometric aesthetic.</div>
+      <div class="card-tags">
+        <span class="ctag">Expandable rows</span>
+        <span class="ctag">Task detail</span>
+        <span class="ctag">Status filter</span>
+        <span class="ctag">Dark / green</span>
+      </div>
+    </a>
+
+    <a href="layout_status_board.html" class="layout-card">
+      <div class="existing-badge">Built</div>
+      <div class="card-num">06</div>
+      <div class="card-type">Kanban Status Board</div>
+      <div class="card-title">Project Status Board</div>
+      <div class="card-desc">Five-column work status view with type, owner, and priority filters. Cards show ID, priority dot, type tag, and assignee. Concrete brutalist light aesthetic.</div>
+      <div class="card-tags">
+        <span class="ctag">Kanban columns</span>
+        <span class="ctag">Priority / type</span>
+        <span class="ctag">Live filter</span>
+        <span class="ctag">Light / brutalist</span>
+      </div>
+    </a>
+
+    <a href="layout_directory_index.html" class="layout-card">
+      <div class="existing-badge">Built</div>
+      <div class="card-num">07</div>
+      <div class="card-type">Profile Directory</div>
+      <div class="card-title">Team Directory Index</div>
+      <div class="card-desc">Filterable profile card grid with persistent detail panel. Click any card to expand full profile with bio, skills, and metadata. Warm purple luxury aesthetic.</div>
+      <div class="card-tags">
+        <span class="ctag">Card grid</span>
+        <span class="ctag">Detail panel</span>
+        <span class="ctag">Avatar system</span>
+        <span class="ctag">Dark / purple</span>
+      </div>
+    </a>
+
+    <div class="layout-card layout-card-disabled" aria-disabled="true">
+      <div class="card-num">08</div>
+      <div class="card-type">Coming next</div>
+      <div class="card-title">Stats Dashboard</div>
+      <div class="card-desc">Metric cards, sparklines, and time-range controls. Designed for reporting, analytics, and ops monitoring use cases.</div>
+      <div class="card-tags">
+        <span class="ctag">Metric cards</span>
+        <span class="ctag">Sparklines</span>
+        <span class="ctag">Time filters</span>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="bottom-note">
+    <div class="note-icon">◈</div>
+    <div class="note-text">
+      <strong>All layouts are single-file HTML with no build-step dependencies</strong>. Fonts currently load from Google Fonts CDN, so each page is self-contained but not fully offline. The pattern is always: <strong>hero → controls → split grid (table or cards + sidebar)</strong>.
+    </div>
+  </footer>
+
+</main>
+<script>
+  (() => {
+    const select = document.getElementById('themeSelect');
+    const storageKey = `layout-theme:${location.pathname.split('/').pop() || 'index.html'}`;
+
+    function applyTheme(value) {
+      if (value && value !== 'default') {
+        document.body.dataset.theme = value;
+      } else {
+        document.body.removeAttribute('data-theme');
+      }
+      select.value = value || 'default';
+    }
+
+    applyTheme(localStorage.getItem(storageKey) || 'default');
+
+    select.addEventListener('change', (event) => {
+      const value = event.target.value;
+      localStorage.setItem(storageKey, value);
+      applyTheme(value);
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Decision Matrix</title>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Libre+Franklin:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f4ef;
+      --surface: #ffffff;
+      --surface-2: #f0ece4;
+      --ink: #1a1714;
+      --muted: #8a8278;
+      --line: #ddd8cf;
+      --accent: #c0392b;
+      --accent-dim: rgba(192,57,43,.08);
+      --gold: #b8860b;
+      --green: #2d6a4f;
+      --radius: 3px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Libre Franklin', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    body[data-theme="oxford"] {
+      --bg: #eef2f7;
+      --surface: #ffffff;
+      --surface-2: #e1e8f0;
+      --ink: #162033;
+      --muted: #667790;
+      --line: #cad5e2;
+      --accent: #2855aa;
+      --accent-dim: rgba(40,85,170,.08);
+      --gold: #b38a2f;
+      --green: #2f6c57;
+    }
+    body[data-theme="moss"] {
+      --bg: #f3f1e8;
+      --surface: #fffdf7;
+      --surface-2: #e7e3d4;
+      --ink: #232019;
+      --muted: #7b7366;
+      --line: #d4cdbd;
+      --accent: #8f4f2b;
+      --accent-dim: rgba(143,79,43,.08);
+      --gold: #c09234;
+      --green: #557443;
+    }
+    .wrap { max-width: 1300px; margin: 0 auto; padding: 44px 28px 80px; }
+    .theme-switcher {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: 0 14px 30px rgba(0,0,0,.12);
+    }
+    .theme-switcher label {
+      font-size: .64rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .theme-switcher select {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font: inherit;
+      font-size: .84rem;
+    }
+    .theme-switcher select:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    .theme-switcher option { background: var(--surface); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 28px;
+      margin-bottom: 28px;
+    }
+    .hero-left {}
+    .overline {
+      font-size: .72rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-family: 'Libre Baskerville', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.05;
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+    .hero-sub {
+      margin-top: 12px;
+      font-size: .92rem;
+      color: var(--muted);
+      font-weight: 300;
+      line-height: 1.7;
+      max-width: 480px;
+    }
+    .hero-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    .instruction-box {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--accent);
+      padding: 14px 16px;
+    }
+    .instruction-box p { font-size: .84rem; color: var(--muted); line-height: 1.6; }
+    .instruction-box strong { color: var(--ink); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .matrix-area {}
+    .options-row {
+      display: grid;
+      grid-template-columns: 200px repeat(4, 1fr);
+      gap: 0;
+      margin-bottom: 0;
+    }
+    .opt-header {
+      background: var(--ink);
+      color: #f7f4ef;
+      padding: 14px 16px;
+      font-family: 'Libre Baskerville', serif;
+      font-size: .88rem;
+      font-weight: 700;
+      text-align: center;
+      border-right: 1px solid #333;
+    }
+    .opt-header:last-child { border-right: none; }
+    .opt-header.blank { background: var(--bg); border-right: 1px solid var(--line); }
+    .opt-header .opt-score {
+      font-size: 1.4rem;
+      font-weight: 700;
+      display: block;
+      margin-top: 4px;
+    }
+    .opt-header .opt-rank {
+      font-family: 'Libre Franklin', sans-serif;
+      font-size: .68rem;
+      font-weight: 400;
+      letter-spacing: .1em;
+      opacity: .6;
+      text-transform: uppercase;
+    }
+
+    .criteria-row {
+      display: grid;
+      grid-template-columns: 200px repeat(4, 1fr);
+      border-bottom: 1px solid var(--line);
+    }
+    .criteria-row:hover { background: rgba(0,0,0,.015); }
+    .crit-label {
+      padding: 14px 16px;
+      border-right: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+    .crit-name { font-weight: 500; font-size: .86rem; }
+    .crit-weight {
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+    .score-cell {
+      padding: 14px 12px;
+      text-align: center;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .score-cell:last-child { border-right: none; }
+    .score-raw {
+      font-family: 'Libre Baskerville', serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .score-weighted {
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+    .score-bar-h {
+      width: 100%;
+      height: 3px;
+      background: var(--line);
+      border-radius: 2px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .score-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+    .score-bar-fill.best { background: var(--green); }
+
+    .weight-slider-row {
+      display: grid;
+      grid-template-columns: 200px repeat(4, 1fr);
+      border-bottom: 2px solid var(--ink);
+      background: #f0ece4;
+    }
+    .weight-label {
+      padding: 10px 16px;
+      font-size: .72rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      border-right: 1px solid var(--line);
+    }
+    .weight-cell {
+      padding: 10px 12px;
+      border-right: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .weight-cell:last-child { border-right: none; }
+
+    .sidebar { display: grid; gap: 14px; }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+    .panel-head {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--line);
+      font-size: .7rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+      background: var(--surface-2);
+    }
+    .panel-body { padding: 16px; }
+    .panel-body p { font-size: .84rem; color: var(--muted); line-height: 1.65; }
+    .panel-body p + p { margin-top: 10px; }
+    .panel-body strong { color: var(--ink); }
+
+    .weight-list { display: grid; gap: 10px; }
+    .weight-item {}
+    .weight-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .weight-name { font-size: .84rem; font-weight: 500; }
+    .weight-pct { font-family: 'Libre Baskerville', serif; font-size: .9rem; font-weight: 700; color: var(--accent); }
+    .w-bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
+    .w-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+
+    .winner-card {
+      background: var(--ink);
+      color: var(--bg);
+      padding: 18px;
+    }
+    .winner-label { font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; opacity: .5; margin-bottom: 8px; }
+    .winner-name { font-family: 'Libre Baskerville', serif; font-size: 1.5rem; font-weight: 700; }
+    .winner-score { font-size: .88rem; opacity: .6; margin-top: 4px; }
+    .winner-note { font-size: .82rem; line-height: 1.6; opacity: .7; margin-top: 12px; border-top: 1px solid rgba(255,255,255,.15); padding-top: 10px; }
+
+    input[type=range] {
+      width: 80px;
+      accent-color: var(--accent);
+    }
+    input[type=range]:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    @media (max-width: 1060px) {
+      .layout { grid-template-columns: 1fr; }
+      .hero { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 700px) {
+      .theme-switcher {
+        position: static;
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        border-radius: var(--radius);
+      }
+    }
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <div class="theme-switcher">
+    <label for="themeSelect">Scheme</label>
+    <select id="themeSelect" aria-label="Select color scheme">
+      <option value="default">Editorial Red</option>
+      <option value="oxford">Oxford</option>
+      <option value="moss">Moss</option>
+    </select>
+  </div>
+
+  <header class="hero">
+    <div class="hero-left">
+      <div class="overline">Layout 04 — Decision Matrix</div>
+      <h1>Weighted Decision<br>Scoring Matrix</h1>
+      <p class="hero-sub">Evaluate multiple options against weighted criteria. Adjust importance sliders to see scores recalculate in real time. Use for vendor selection, platform choice, or any multi-factor decision.</p>
+    </div>
+    <div class="hero-right">
+      <div class="instruction-box">
+        <p><strong>How to use:</strong> Each criterion row shows raw scores (1–10) per option. The weighted score factors in importance. Drag the sliders to change how much each criterion matters — totals update automatically.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <section class="matrix-area" aria-label="Decision matrix">
+      <div id="matrixRoot"></div>
+    </section>
+
+    <aside class="sidebar">
+      <div id="winnerCard" class="winner-card">
+        <div class="winner-label">Current winner</div>
+        <div class="winner-name" id="winnerName">—</div>
+        <div class="winner-score" id="winnerScore"></div>
+        <div class="winner-note" id="winnerNote"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">Weight distribution</div>
+        <div class="panel-body">
+          <div class="weight-list" id="weightViz"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">Scoring guide</div>
+        <div class="panel-body">
+          <p><strong>9–10:</strong> Exceptional — category leader.</p>
+          <p><strong>7–8:</strong> Strong — meets needs well.</p>
+          <p><strong>5–6:</strong> Adequate — works but with trade-offs.</p>
+          <p><strong>3–4:</strong> Weak — meaningful gaps.</p>
+          <p><strong>1–2:</strong> Poor — significant deficiency.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+</main>
+<script>
+  const options = [
+    { name: 'Option A', desc: 'Netlify', notes: 'Strong DX, generous free tier, global CDN. Limited backend.' },
+    { name: 'Option B', desc: 'Vercel', notes: 'Best-in-class Next.js support. Pricing scales fast at team level.' },
+    { name: 'Option C', desc: 'Dokku (self-hosted)', notes: 'Full control, no platform cost. You own the ops burden.' },
+    { name: 'Option D', desc: 'Render', notes: 'Balanced managed platform. Good for full-stack without Vercel lock-in.' },
+  ];
+
+  const criteria = [
+    { name: 'Deploy speed',       key: 'deploy',   weight: 20, scores: [9, 10, 6, 8] },
+    { name: 'Cost at scale',      key: 'cost',     weight: 25, scores: [7, 5, 10, 8] },
+    { name: 'DX / developer UX',  key: 'dx',       weight: 20, scores: [9, 10, 6, 7] },
+    { name: 'Backend support',    key: 'backend',  weight: 15, scores: [5, 6, 10, 9] },
+    { name: 'Vendor lock-in risk',key: 'lockin',   weight: 10, scores: [6, 4, 10, 8] },
+    { name: 'Team collaboration', key: 'team',     weight: 10, scores: [8, 9, 5, 7] },
+  ];
+
+  const weights = criteria.map(c => c.weight);
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch]));
+  }
+
+  function totalWeight() { return weights.reduce((a, b) => a + b, 0); }
+
+  function computeScores() {
+    const tw = totalWeight();
+    return options.map((_, oi) => {
+      return criteria.reduce((sum, c, ci) => sum + (c.scores[oi] * weights[ci] / tw), 0);
+    });
+  }
+
+  function render() {
+    const tw = totalWeight();
+    const totals = computeScores();
+    const maxTotal = Math.max(...totals);
+    const winnerIdx = totals.indexOf(maxTotal);
+
+    // Winner card
+    document.getElementById('winnerName').textContent = options[winnerIdx].desc;
+    document.getElementById('winnerScore').textContent = `Weighted score: ${totals[winnerIdx].toFixed(1)} / 10`;
+    document.getElementById('winnerNote').textContent = options[winnerIdx].notes;
+
+    // Weight viz
+    document.getElementById('weightViz').innerHTML = criteria.map((c, i) => `
+      <div class="weight-item">
+        <div class="weight-row">
+          <span class="weight-name">${escapeHtml(c.name)}</span>
+          <span class="weight-pct">${Math.round(weights[i] / tw * 100)}%</span>
+        </div>
+        <div class="w-bar"><div class="w-fill" style="width:${weights[i] / tw * 100}%"></div></div>
+      </div>
+    `).join('');
+
+    // Matrix
+    const optHeaders = `
+      <div class="options-row">
+        <div class="opt-header blank"></div>
+        ${options.map((o, i) => `
+          <div class="opt-header" style="${i === winnerIdx ? 'background:var(--green)' : ''}">
+            ${escapeHtml(o.name)}<br>
+            <span style="font-family:'Libre Franklin',sans-serif;font-size:.72rem;font-weight:300;opacity:.7">${escapeHtml(o.desc)}</span>
+            <span class="opt-score">${totals[i].toFixed(1)}</span>
+            <span class="opt-rank">${i === winnerIdx ? '★ top pick' : `rank ${[...totals].sort((a,b)=>b-a).indexOf(totals[i])+1}`}</span>
+          </div>
+        `).join('')}
+      </div>`;
+
+    const sliderRow = `
+      <div class="weight-slider-row">
+        <div class="weight-label">Adjust weight</div>
+        ${criteria.map((c, ci) => `<div class="weight-cell" style="grid-column:${ci+2}"></div>`).join('')}
+      </div>`;
+
+    const rows = criteria.map((c, ci) => {
+      const maxScore = Math.max(...c.scores);
+      return `
+        <div class="criteria-row">
+          <div class="crit-label">
+            <div class="crit-name">${escapeHtml(c.name)}</div>
+            <div class="crit-weight">Weight: ${Math.round(weights[ci] / tw * 100)}%
+              <input type="range" min="5" max="40" value="${weights[ci]}" data-ci="${ci}" aria-label="Adjust weight for ${escapeHtml(c.name)}" style="display:block;margin-top:4px;width:120px;">
+            </div>
+          </div>
+          ${c.scores.map((s, oi) => {
+            const ws = (s * weights[ci] / tw).toFixed(1);
+            const isBest = s === maxScore;
+            return `
+              <div class="score-cell">
+                <div class="score-raw" style="color:${isBest ? 'var(--green)' : 'var(--ink)'}">${s}</div>
+                <div class="score-weighted">+${ws} pts</div>
+                <div class="score-bar-h"><div class="score-bar-fill ${isBest ? 'best' : ''}" style="width:${s*10}%"></div></div>
+              </div>`;
+          }).join('')}
+        </div>`;
+    }).join('');
+
+    document.getElementById('matrixRoot').innerHTML = optHeaders + rows;
+
+    document.querySelectorAll('input[data-ci]').forEach(input => {
+      input.addEventListener('input', e => {
+        const ci = parseInt(e.target.dataset.ci);
+        weights[ci] = parseInt(e.target.value);
+        render();
+      });
+    });
+  }
+
+  render();
+
+  (() => {
+    const select = document.getElementById('themeSelect');
+    const storageKey = `layout-theme:${location.pathname.split('/').pop() || 'layout_decision_matrix.html'}`;
+
+    function applyTheme(value) {
+      if (value && value !== 'default') {
+        document.body.dataset.theme = value;
+      } else {
+        document.body.removeAttribute('data-theme');
+      }
+      select.value = value || 'default';
+    }
+
+    applyTheme(localStorage.getItem(storageKey) || 'default');
+
+    select.addEventListener('change', (event) => {
+      const value = event.target.value;
+      localStorage.setItem(storageKey, value);
+      applyTheme(value);
+      render();
+    });
+  })();
+</script>
+</body>
+</html>

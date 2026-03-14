@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Directory Index</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0b14;
+      --surface: #16111e;
+      --surface-2: #1e1829;
+      --text: #ede8f8;
+      --muted: #7a6e90;
+      --line: #2a2040;
+      --purple: #9c7de8;
+      --purple-dim: rgba(156,125,232,.08);
+      --gold: #c8a84a;
+      --rose: #d472a0;
+      --teal: #4ac4b0;
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Jost', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    body[data-theme="emerald"] {
+      --bg: #0c1412;
+      --surface: #121c19;
+      --surface-2: #182622;
+      --text: #e6f4ef;
+      --muted: #78978d;
+      --line: #214036;
+      --purple: #5fd4b7;
+      --purple-dim: rgba(95,212,183,.08);
+      --gold: #d8bf65;
+      --rose: #f08fa5;
+      --teal: #75d6ff;
+    }
+    body[data-theme="wine"] {
+      --bg: #160b11;
+      --surface: #20111a;
+      --surface-2: #2a1822;
+      --text: #f6e7ee;
+      --muted: #a07b8d;
+      --line: #402034;
+      --purple: #d9749c;
+      --purple-dim: rgba(217,116,156,.08);
+      --gold: #d0a562;
+      --rose: #f093c7;
+      --teal: #6fc7c2;
+    }
+    .wrap { max-width: 1360px; margin: 0 auto; padding: 44px 28px 80px; }
+    .theme-switcher {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: 0 14px 30px rgba(0,0,0,.18);
+    }
+    .theme-switcher label {
+      font-size: .64rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .theme-switcher select {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font: inherit;
+      font-size: .84rem;
+    }
+    .theme-switcher select:focus-visible {
+      outline: 2px solid var(--purple);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    .theme-switcher option { background: var(--surface); }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+      margin-bottom: 30px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      font-size: .68rem;
+      letter-spacing: .22em;
+      color: var(--purple);
+      text-transform: uppercase;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -.01em;
+    }
+    h1 em { font-style: italic; color: var(--purple); }
+    .hero-sub { font-size: .9rem; color: var(--muted); margin-top: 10px; font-weight: 300; line-height: 1.7; max-width: 520px; }
+    .hero-count {
+      text-align: right;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 4rem;
+      font-weight: 700;
+      color: var(--purple);
+      line-height: 1;
+    }
+    .hero-count span { font-size: 1rem; font-family: 'Jost', sans-serif; font-weight: 300; color: var(--muted); display: block; margin-top: 4px; }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .ctrl {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 11px 14px;
+    }
+    .ctrl label { display: block; font-size: .68rem; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; margin-bottom: 7px; }
+    .ctrl input, .ctrl select {
+      background: transparent; border: none;
+      color: var(--text); font-family: 'Jost', sans-serif;
+      font-size: .9rem; width: 100%;
+    }
+    .ctrl input:focus-visible, .ctrl select:focus-visible {
+      outline: 2px solid var(--purple);
+      outline-offset: 2px;
+    }
+    .ctrl select option { background: #16111e; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .person-card {
+      appearance: none;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      width: 100%;
+    }
+    .person-card:hover, .person-card.selected {
+      border-color: var(--purple);
+      background: var(--surface-2);
+    }
+    .person-card:focus-visible {
+      outline: 2px solid var(--purple);
+      outline-offset: 2px;
+    }
+    .avatar {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+    .card-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 3px;
+    }
+    .card-role { font-size: .78rem; color: var(--muted); font-weight: 300; margin-bottom: 10px; line-height: 1.4; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tag {
+      font-size: .65rem;
+      padding: 2px 7px;
+      border-radius: 3px;
+      border: 1px solid;
+      font-weight: 500;
+      letter-spacing: .04em;
+    }
+    .tag-dev { color: var(--purple); border-color: rgba(156,125,232,.25); background: rgba(156,125,232,.06); }
+    .tag-design { color: var(--rose); border-color: rgba(212,114,160,.25); background: rgba(212,114,160,.06); }
+    .tag-pm { color: var(--gold); border-color: rgba(200,168,74,.25); background: rgba(200,168,74,.06); }
+    .tag-ops { color: var(--teal); border-color: rgba(74,196,176,.25); background: rgba(74,196,176,.06); }
+
+    .detail-panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      position: sticky;
+      top: 20px;
+      overflow: hidden;
+    }
+    .detail-empty {
+      padding: 40px 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.65;
+    }
+    .detail-empty-icon {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem;
+      color: var(--line);
+      margin-bottom: 12px;
+    }
+    .detail-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    .detail-avatar { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 700; flex-shrink: 0; }
+    .detail-name { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 700; line-height: 1.1; }
+    .detail-role { font-size: .84rem; color: var(--muted); margin-top: 4px; font-weight: 300; }
+    .detail-body { padding: 20px 24px; }
+    .detail-section { margin-bottom: 20px; }
+    .detail-section:last-child { margin-bottom: 0; }
+    .detail-section-title {
+      font-size: .68rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+    .detail-section p { font-size: .88rem; color: var(--muted); line-height: 1.65; }
+    .detail-kv { display: grid; gap: 8px; }
+    .kv-row { display: flex; justify-content: space-between; align-items: baseline; font-size: .84rem; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+    .kv-row:last-child { border-bottom: none; }
+    .kv-key { color: var(--muted); }
+    .kv-val { font-weight: 500; }
+    .detail-skills { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    @media (max-width: 1060px) {
+      .layout { grid-template-columns: 1fr; }
+      .detail-panel { position: static; }
+    }
+    @media (max-width: 700px) {
+      .theme-switcher {
+        position: static;
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        border-radius: var(--radius);
+      }
+    }
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <div class="theme-switcher">
+    <label for="themeSelect">Scheme</label>
+    <select id="themeSelect" aria-label="Select color scheme">
+      <option value="default">Noir Violet</option>
+      <option value="emerald">Emerald</option>
+      <option value="wine">Wine</option>
+    </select>
+  </div>
+
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Layout 07 — Directory Index</div>
+      <h1>Team <em>Directory</em></h1>
+      <p class="hero-sub">Profile card grid with live filter and persistent detail panel. Click any card to expand full profile on the right. Filter by role type, department, or name.</p>
+    </div>
+    <div>
+      <div class="hero-count" id="countDisplay">—<span>people shown</span></div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="ctrl">
+      <label for="search">Search name or skill</label>
+      <input id="search" type="text" placeholder="Name, skill, location..." />
+    </div>
+    <div class="ctrl">
+      <label for="deptFilter">Department</label>
+      <select id="deptFilter">
+        <option value="all">All departments</option>
+        <option value="Engineering">Engineering</option>
+        <option value="Design">Design</option>
+        <option value="Product">Product</option>
+        <option value="Operations">Operations</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <label for="roleFilter">Role type</label>
+      <select id="roleFilter">
+        <option value="all">All roles</option>
+        <option value="dev">Developer</option>
+        <option value="design">Designer</option>
+        <option value="pm">Product</option>
+        <option value="ops">Operations</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="layout">
+    <section class="grid" id="grid" aria-label="Directory results"></section>
+    <aside class="detail-panel" id="detailPanel" aria-live="polite">
+      <div class="detail-empty">
+        <div class="detail-empty-icon">◈</div>
+        Select a person to view their full profile
+      </div>
+    </aside>
+  </div>
+
+</main>
+<script>
+  const people = [
+    { id: 1, name: 'Maya Chen', initials: 'MC', role: 'Senior Frontend Engineer', dept: 'Engineering', type: 'dev', color: '#4a2878', textColor: '#c9a0f8', location: 'San Francisco, CA', joined: 'Mar 2022', skills: ['React', 'TypeScript', 'CSS', 'Vite', 'Playwright'], bio: 'Specializes in design systems and performance-critical UI. Leads the component library initiative and owns the accessibility audit process.', projects: 'Design System v2, Dashboard Rebuild', availability: 'On project until Q3' },
+    { id: 2, name: 'James Okafor', initials: 'JO', role: 'Backend Engineer', dept: 'Engineering', type: 'dev', color: '#1a3a6a', textColor: '#8ab8f8', location: 'Lagos, NG', joined: 'Jan 2021', skills: ['Node.js', 'PostgreSQL', 'Redis', 'Docker', 'Go'], bio: 'Infrastructure-focused engineer with a background in distributed systems. Owns the API gateway and service mesh layer.', projects: 'API v3, Auth Service', availability: 'Available Q3' },
+    { id: 3, name: 'Sara Lindqvist', initials: 'SL', role: 'Product Designer', dept: 'Design', type: 'design', color: '#6a1840', textColor: '#f088c0', location: 'Stockholm, SE', joined: 'Jul 2022', skills: ['Figma', 'Prototyping', 'User Research', 'Motion', 'Design Systems'], bio: 'End-to-end product designer focused on reducing cognitive load. Champions user testing at every sprint and runs the weekly design critique.', projects: 'Mobile Redesign, Onboarding Flow', availability: 'On project through EOY' },
+    { id: 4, name: 'Rohan Mehta', initials: 'RM', role: 'Product Manager', dept: 'Product', type: 'pm', color: '#5a3a00', textColor: '#d4a840', location: 'Bangalore, IN', joined: 'Sep 2020', skills: ['Strategy', 'Roadmapping', 'Data Analysis', 'Stakeholder Mgmt', 'SQL'], bio: 'PM for the core product experience. Drives OKR planning and owns the quarterly roadmap process. Former SWE background gives him strong technical grounding.', projects: 'Q3 Roadmap, Pricing Redesign', availability: 'Active' },
+    { id: 5, name: 'Priya Sato', initials: 'PS', role: 'DevOps / Platform Engineer', dept: 'Operations', type: 'ops', color: '#0a3a30', textColor: '#5ad8c0', location: 'Tokyo, JP', joined: 'Apr 2021', skills: ['Kubernetes', 'Terraform', 'GitHub Actions', 'Prometheus', 'AWS'], bio: 'Platform engineer responsible for the CI/CD pipeline, infra-as-code standards, and SLO framework. Runs the monthly incident review process.', projects: 'Platform v2, Observability Stack', availability: 'On-call rotation' },
+    { id: 6, name: 'Leo Martinez', initials: 'LM', role: 'Full Stack Engineer', dept: 'Engineering', type: 'dev', color: '#3a2060', textColor: '#b09ae0', location: 'Mexico City, MX', joined: 'Nov 2022', skills: ['Next.js', 'Python', 'FastAPI', 'SQLAlchemy', 'Stripe'], bio: 'Generalist engineer who moves fluidly between frontend and backend. Currently owns the billing integration and payment flow.', projects: 'Billing System, API Docs', availability: 'Available Q4' },
+    { id: 7, name: 'Anya Kowalski', initials: 'AK', role: 'UX Researcher', dept: 'Design', type: 'design', color: '#6a2050', textColor: '#e890c0', location: 'Warsaw, PL', joined: 'Feb 2023', skills: ['User Interviews', 'Usability Testing', 'Survey Design', 'Data Synthesis', 'Figma'], bio: 'Qualitative researcher focused on enterprise user workflows. Runs bi-weekly user panels and synthesizes findings into actionable design briefs.', projects: 'Enterprise UX Audit, Onboarding Research', availability: 'Active' },
+    { id: 8, name: 'Kwame Asante', initials: 'KA', role: 'Engineering Manager', dept: 'Engineering', type: 'dev', color: '#1a3050', textColor: '#78b0e8', location: 'Accra, GH', joined: 'Jun 2020', skills: ['Team Leadership', 'Architecture', 'TypeScript', 'Hiring', 'RFC Process'], bio: 'Engineering manager overseeing the frontend guild. Focuses on technical strategy, team growth, and cross-functional alignment between engineering and product.', projects: 'Frontend Guild, Hiring Pipeline', availability: 'Management track' },
+  ];
+
+  let selected = null;
+  const grid = document.getElementById('grid');
+  const detailPanel = document.getElementById('detailPanel');
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch]));
+  }
+
+  function avatarStyle(p) {
+    return `background:${p.color};color:${p.textColor};`;
+  }
+  const tagMap = { dev: 'tag-dev', design: 'tag-design', pm: 'tag-pm', ops: 'tag-ops' };
+  const tagLabel = { dev: 'Dev', design: 'Design', pm: 'Product', ops: 'Ops' };
+
+  function renderDetail(p) {
+    if (!p) {
+      detailPanel.innerHTML = `<div class="detail-empty"><div class="detail-empty-icon">◈</div>Select a person to view their full profile</div>`;
+      return;
+    }
+    detailPanel.innerHTML = `
+      <div class="detail-header">
+        <div class="detail-avatar" style="${avatarStyle(p)}">${escapeHtml(p.initials)}</div>
+        <div>
+          <div class="detail-name">${escapeHtml(p.name)}</div>
+          <div class="detail-role">${escapeHtml(p.role)} · ${escapeHtml(p.dept)}</div>
+        </div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-section">
+          <div class="detail-section-title">Bio</div>
+          <p>${escapeHtml(p.bio)}</p>
+        </div>
+        <div class="detail-section">
+          <div class="detail-section-title">Details</div>
+          <div class="detail-kv">
+            <div class="kv-row"><span class="kv-key">Location</span><span class="kv-val">${escapeHtml(p.location)}</span></div>
+            <div class="kv-row"><span class="kv-key">Joined</span><span class="kv-val">${escapeHtml(p.joined)}</span></div>
+            <div class="kv-row"><span class="kv-key">Current projects</span><span class="kv-val">${escapeHtml(p.projects)}</span></div>
+            <div class="kv-row"><span class="kv-key">Availability</span><span class="kv-val">${escapeHtml(p.availability)}</span></div>
+          </div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-section-title">Skills</div>
+          <div class="detail-skills">
+            ${p.skills.map(s => `<span class="tag ${tagMap[p.type]}">${escapeHtml(s)}</span>`).join('')}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function render() {
+    const q = document.getElementById('search').value.trim().toLowerCase();
+    const dept = document.getElementById('deptFilter').value;
+    const role = document.getElementById('roleFilter').value;
+
+    const filtered = people.filter(p => {
+      const hay = [p.name, p.role, p.dept, p.type, p.location, ...p.skills].join(' ').toLowerCase();
+      return (!q || hay.includes(q)) &&
+             (dept === 'all' || p.dept === dept) &&
+             (role === 'all' || p.type === role);
+    });
+
+    document.getElementById('countDisplay').innerHTML = `${filtered.length}<span>people shown</span>`;
+
+    grid.innerHTML = filtered.map(p => `
+      <button type="button" class="person-card ${selected === p.id ? 'selected' : ''}" data-person-id="${p.id}" aria-pressed="${selected === p.id ? 'true' : 'false'}">
+        <div class="avatar" style="${avatarStyle(p)}">${escapeHtml(p.initials)}</div>
+        <div class="card-name">${escapeHtml(p.name)}</div>
+        <div class="card-role">${escapeHtml(p.role)}</div>
+        <div class="card-tags">
+          <span class="tag ${tagMap[p.type]}">${tagLabel[p.type]}</span>
+          <span class="tag" style="color:var(--muted);border-color:var(--line);background:transparent;">${escapeHtml(p.dept)}</span>
+        </div>
+      </button>
+    `).join('') || `<div style="padding:24px;color:var(--muted);font-size:.88rem">No matches found.</div>`;
+
+    if (selected && !filtered.find(p => p.id === selected)) {
+      selected = null;
+      renderDetail(null);
+    }
+  }
+
+  function selectPerson(id) {
+    selected = id;
+    const p = people.find(x => x.id === id);
+    renderDetail(p);
+    render();
+  }
+
+  document.getElementById('search').addEventListener('input', render);
+  document.getElementById('deptFilter').addEventListener('change', render);
+  document.getElementById('roleFilter').addEventListener('change', render);
+  grid.addEventListener('click', (event) => {
+    const card = event.target.closest('[data-person-id]');
+    if (!card) return;
+    selectPerson(Number(card.dataset.personId));
+  });
+  render();
+
+  (() => {
+    const select = document.getElementById('themeSelect');
+    const storageKey = `layout-theme:${location.pathname.split('/').pop() || 'layout_directory_index.html'}`;
+
+    function applyTheme(value) {
+      if (value && value !== 'default') {
+        document.body.dataset.theme = value;
+      } else {
+        document.body.removeAttribute('data-theme');
+      }
+      select.value = value || 'default';
+    }
+
+    applyTheme(localStorage.getItem(storageKey) || 'default');
+
+    select.addEventListener('change', (event) => {
+      const value = event.target.value;
+      localStorage.setItem(storageKey, value);
+      applyTheme(value);
+      render();
+      if (selected) {
+        renderDetail(people.find((person) => person.id === selected) || null);
+      }
+    });
+  })();
+</script>
+</body>
+</html>

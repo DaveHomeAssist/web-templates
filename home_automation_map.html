@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home Automation Platform Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080c14;
+      --surface: #0d1420;
+      --surface-2: #121d2e;
+      --text: #dce8f8;
+      --muted: #5a7090;
+      --line: #1a2840;
+      --cyan: #38bdf8;
+      --cyan-dim: rgba(56,189,248,.07);
+      --green: #4ade80;
+      --orange: #fb923c;
+      --purple: #a78bfa;
+      --red: #f87171;
+      --text-soft: #5a7090;
+      --text-faint: #3a5070;
+      --radius: 5px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    body[data-theme="aurora"] {
+      --bg: #07120f;
+      --surface: #0d1a16;
+      --surface-2: #12241e;
+      --text: #dcf7ef;
+      --muted: #5d8f84;
+      --line: #17362d;
+      --cyan: #4df2c2;
+      --cyan-dim: rgba(77,242,194,.07);
+      --green: #88e06f;
+      --orange: #f6b04d;
+      --purple: #7aa2ff;
+      --red: #ff8073;
+      --text-soft: #6e9d92;
+      --text-faint: #44645d;
+    }
+    body[data-theme="magenta-grid"] {
+      --bg: #120816;
+      --surface: #1a0d20;
+      --surface-2: #251232;
+      --text: #f4e2fb;
+      --muted: #9a73aa;
+      --line: #3a1850;
+      --cyan: #ff6bd6;
+      --cyan-dim: rgba(255,107,214,.07);
+      --green: #7ce7a0;
+      --orange: #ffb45f;
+      --purple: #8cb4ff;
+      --red: #ff8078;
+      --text-soft: #ab86ba;
+      --text-faint: #755386;
+    }
+    .wrap { max-width: 1380px; margin: 0 auto; padding: 40px 28px 80px; }
+    .theme-switcher {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: 0 14px 30px rgba(0,0,0,.18);
+    }
+    .theme-switcher label {
+      font-family: 'Space Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .theme-switcher select {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font: inherit;
+      font-size: .84rem;
+    }
+    .theme-switcher select:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    .theme-switcher option { background: var(--surface); }
+
+    .hero {
+      background: linear-gradient(90deg, rgba(56,189,248,.06) 0%, transparent 60%);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--cyan);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 24px 28px;
+      margin-bottom: 22px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 24px;
+    }
+    .hero-eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: .65rem;
+      letter-spacing: .2em;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: clamp(1.5rem, 3.5vw, 2.4rem);
+      font-weight: 600;
+      letter-spacing: -.02em;
+      line-height: 1.15;
+    }
+    .hero-sub {
+      margin-top: 8px;
+      font-size: .9rem;
+      color: var(--muted);
+      font-weight: 300;
+      line-height: 1.65;
+      max-width: 680px;
+    }
+    .ping-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .ping {
+      font-family: 'Space Mono', monospace;
+      font-size: .72rem;
+      padding: 6px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ping::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 6px var(--cyan);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .ping.orange::before { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+    .ping.green::before { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .ctrl {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 11px 14px;
+    }
+    .ctrl label {
+      display: block;
+      font-family: 'Space Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 7px;
+    }
+    .ctrl input, .ctrl select {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: .88rem;
+      width: 100%;
+    }
+    .ctrl input:focus-visible, .ctrl select:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 2px;
+    }
+    .ctrl select option { background: #0d1420; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 310px;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .table-outer {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: auto;
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 700px; }
+    th {
+      font-family: 'Space Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 11px 16px;
+      text-align: left;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      position: sticky; top: 0; z-index: 1;
+    }
+    td { padding: 13px 16px; border-bottom: 1px solid var(--line); font-size: .86rem; line-height: 1.5; vertical-align: top; }
+    tbody tr:hover td { background: rgba(56,189,248,.03); }
+    .feature-name { font-weight: 500; font-size: .9rem; }
+    .platform-tag {
+      display: inline-block;
+      margin-top: 5px;
+      font-family: 'Space Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 3px;
+      border: 1px solid;
+    }
+    .p-ha { color: #38bdf8; border-color: rgba(56,189,248,.25); background: rgba(56,189,248,.05); }
+    .p-hubitat { color: #fb923c; border-color: rgba(251,146,60,.25); background: rgba(251,146,60,.05); }
+    .p-both { color: #4ade80; border-color: rgba(74,222,128,.25); background: rgba(74,222,128,.05); }
+    .p-neither { color: #f87171; border-color: rgba(248,113,113,.25); background: rgba(248,113,113,.05); }
+
+    .sidebar { display: grid; gap: 12px; }
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+    }
+    .panel-head {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--line);
+      font-family: 'Space Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .panel-body { padding: 14px 16px; }
+    .panel-body p { font-size: .84rem; color: var(--muted); line-height: 1.65; }
+    .panel-body p + p { margin-top: 10px; }
+    .panel-body strong { color: var(--text); font-weight: 500; }
+
+    .score-grid { display: grid; gap: 10px; }
+    .score-item { }
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .score-label { font-size: .82rem; color: var(--text); }
+    .score-val { font-family: 'Space Mono', monospace; font-size: .78rem; color: var(--muted); }
+    .score-bar {
+      height: 4px;
+      background: var(--line);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .score-fill { height: 100%; border-radius: 2px; transition: width .3s; }
+    .fill-ha { background: var(--cyan); }
+    .fill-hub { background: var(--orange); }
+
+    .integration-list { display: grid; gap: 6px; }
+    .int-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .82rem;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .int-row:last-child { border-bottom: none; }
+    .int-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    @media (max-width: 1060px) {
+      .layout { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: 1fr 1fr; }
+      .hero { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 700px) {
+      .theme-switcher {
+        position: static;
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        border-radius: var(--radius);
+      }
+    }
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <div class="theme-switcher">
+    <label for="themeSelect">Scheme</label>
+    <select id="themeSelect" aria-label="Select color scheme">
+      <option value="default">Cyan Grid</option>
+      <option value="aurora">Aurora</option>
+      <option value="magenta-grid">Magenta Grid</option>
+    </select>
+  </div>
+
+  <header class="hero">
+    <div>
+      <div class="hero-eyebrow">Home Assistant + Tailscale Homelab</div>
+      <h1>Home Automation<br>Platform Capability Map</h1>
+      <p class="hero-sub">Feature-by-feature comparison of Home Assistant, Hubitat, and hybrid approaches across automation, integration depth, local control, and developer extensibility.</p>
+    </div>
+    <div>
+      <div class="ping-row">
+        <div class="ping">Home Assistant</div>
+        <div class="ping orange">Hubitat</div>
+        <div class="ping green">Both</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="ctrl">
+      <label for="search">Search feature or protocol</label>
+      <input id="search" type="text" placeholder="Zigbee, MQTT, automations, dashboard, Z-Wave..." />
+    </div>
+    <div class="ctrl">
+      <label for="areaFilter">Feature area</label>
+      <select id="areaFilter">
+        <option value="all">All areas</option>
+        <option value="Automation">Automation engine</option>
+        <option value="Integrations">Integrations</option>
+        <option value="Dashboard">Dashboard / UI</option>
+        <option value="Local">Local control</option>
+        <option value="Developer">Developer tools</option>
+        <option value="Hardware">Hardware support</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <label for="platFilter">Platform advantage</label>
+      <select id="platFilter">
+        <option value="all">All platforms</option>
+        <option value="HA">Home Assistant wins</option>
+        <option value="Hubitat">Hubitat wins</option>
+        <option value="Both">Both strong</option>
+        <option value="Neither">Depends on setup</option>
+      </select>
+    </div>
+    <div class="ctrl">
+      <label for="depthFilter">Technical depth</label>
+      <select id="depthFilter">
+        <option value="all">All levels</option>
+        <option value="Beginner">Beginner friendly</option>
+        <option value="Intermediate">Intermediate</option>
+        <option value="Advanced">Advanced / power user</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="layout">
+    <section class="table-outer" aria-label="Capability comparison table">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature / Capability</th>
+            <th>Home Assistant</th>
+            <th>Hubitat</th>
+            <th>Key distinction</th>
+            <th>Depth required</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </section>
+
+    <aside class="sidebar">
+
+      <div class="panel">
+        <div class="panel-head">Capability scores</div>
+        <div class="panel-body">
+          <div class="score-grid">
+            <div class="score-item">
+              <div class="score-header"><span class="score-label">Integration breadth</span><span class="score-val">HA 95 / Hub 62</span></div>
+              <div class="score-bar"><div class="score-fill fill-ha" style="width:95%"></div></div>
+            </div>
+            <div class="score-item">
+              <div class="score-header"><span class="score-label">Automation power</span><span class="score-val">HA 90 / Hub 75</span></div>
+              <div class="score-bar"><div class="score-fill fill-ha" style="width:90%"></div></div>
+            </div>
+            <div class="score-item">
+              <div class="score-header"><span class="score-label">Local reliability</span><span class="score-val">Hub 92 / HA 82</span></div>
+              <div class="score-bar"><div class="score-fill fill-hub" style="width:92%"></div></div>
+            </div>
+            <div class="score-item">
+              <div class="score-header"><span class="score-label">Dashboard / UI</span><span class="score-val">HA 88 / Hub 55</span></div>
+              <div class="score-bar"><div class="score-fill fill-ha" style="width:88%"></div></div>
+            </div>
+            <div class="score-item">
+              <div class="score-header"><span class="score-label">Ease of setup</span><span class="score-val">Hub 80 / HA 60</span></div>
+              <div class="score-bar"><div class="score-fill fill-hub" style="width:80%"></div></div>
+            </div>
+            <div class="score-item">
+              <div class="score-header"><span class="score-label">Community size</span><span class="score-val">HA 99 / Hub 45</span></div>
+              <div class="score-bar"><div class="score-fill fill-ha" style="width:99%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">Protocol support at a glance</div>
+        <div class="panel-body">
+          <div class="integration-list">
+            <div class="int-row"><div class="int-dot" style="background:var(--green)"></div>Zigbee — Both (ZHA / ZigBee2MQTT vs built-in)</div>
+            <div class="int-row"><div class="int-dot" style="background:var(--green)"></div>Z-Wave — Both (ZWaveJS vs built-in)</div>
+            <div class="int-row"><div class="int-dot" style="background:var(--cyan)"></div>MQTT — Home Assistant (native broker)</div>
+            <div class="int-row"><div class="int-dot" style="background:var(--cyan)"></div>Matter / Thread — Home Assistant (native)</div>
+            <div class="int-row"><div class="int-dot" style="background:var(--cyan)"></div>Bluetooth LE — Home Assistant (ESPHome)</div>
+            <div class="int-row"><div class="int-dot" style="background:var(--green)"></div>LAN / local HTTP — Both</div>
+            <div class="int-row"><div class="int-dot" style="background:var(--orange)"></div>Lutron Radio RA2 — Hubitat (native)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">Homelab notes</div>
+        <div class="panel-body">
+          <p><strong>Tailscale + HA:</strong> Expose your instance remotely without port forwarding. Combine with HA Cloud for voice assistant fallback when off-VPN.</p>
+          <p><strong>Recommended stack:</strong> HA on Dell server (Proxmox VM or dedicated SSD), Zigbee2MQTT on same host, MQTT broker local, Dasherr on separate container for dashboard aggregation.</p>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+</main>
+<script>
+  const rows = [
+    { name: 'Visual automation editor', area: 'Automation', plat: 'Both', depth: 'Beginner', ha: 'Node-RED integration + native visual editor. Supports conditions, templates, and action sequences.', hub: 'Rule Machine — powerful but syntax-heavy. Basic Automations for simpler flows.', key: 'HA\'s native editor has surpassed Hubitat\'s UX in recent versions.' },
+    { name: 'YAML / script automations', area: 'Automation', plat: 'HA', depth: 'Advanced', ha: 'Full YAML scripting with variables, loops, choose, repeat, parallel, and wait_for_trigger.', hub: 'Groovy-based driver and app scripts. Powerful but requires Java/Groovy knowledge.', key: 'HA YAML is the power-user ceiling; Groovy is Hubitat\'s equivalent but less modern.' },
+    { name: 'Blueprint sharing', area: 'Automation', plat: 'HA', depth: 'Beginner', ha: 'Community blueprint library. One-click import and configure premade automations.', hub: 'No native blueprint concept. Community Groovy apps exist but require manual install.', key: 'Blueprints dramatically lower the floor for complex HA automations.' },
+    { name: 'Local processing only', area: 'Local', plat: 'Both', depth: 'Beginner', ha: 'All automations run locally. Cloud only needed for remote access and some voice integrations.', hub: 'Fully local by design. No cloud dependency for any core function.', key: 'Hubitat was local-first from day one; HA added local by default more gradually.' },
+    { name: 'Offline resilience', area: 'Local', plat: 'Hubitat', depth: 'Beginner', ha: 'Local automations survive internet outage. Cloud-based integrations (Nest, Alexa) fail.', hub: 'Designed for zero-internet operation. Z-Wave and Zigbee work fully offline.', key: 'Hubitat\'s embedded hub hardware is more resilient to host OS issues.' },
+    { name: 'Matter / Thread', area: 'Hardware', plat: 'HA', depth: 'Intermediate', ha: 'Native Matter controller. Thread border router via Home Assistant Yellow or SkyConnect dongle.', hub: 'Limited Matter support. No Thread border router capability in current hardware.', key: 'For future-proofing with Matter devices, HA is the clear choice right now.' },
+    { name: 'Zigbee support', area: 'Hardware', plat: 'Both', depth: 'Intermediate', ha: 'ZHA (built-in) or Zigbee2MQTT (more devices). Requires USB coordinator or dedicated dongle.', hub: 'Built-in Zigbee radio on most hub models. Simpler setup for common devices.', key: 'Hubitat is easier; Zigbee2MQTT gives HA more device compatibility.' },
+    { name: 'Z-Wave support', area: 'Hardware', plat: 'Both', depth: 'Intermediate', ha: 'ZWaveJS (via USB stick). Full network heal, S2 security, and SmartStart provisioning.', hub: 'Built-in Z-Wave radio. Mature driver library, strong community device support.', key: 'Both are solid. Hubitat has historically had better Z-Wave driver quality.' },
+    { name: 'Lovelace dashboard (HA)', area: 'Dashboard', plat: 'HA', depth: 'Intermediate', ha: 'Fully customizable YAML or GUI card editor. Hundreds of custom card integrations via HACS.', hub: 'Basic dashboard. Tiles and devices page only. Limited layout flexibility.', key: 'HA\'s dashboard is a major differentiator. Hubitat\'s is functional but spartan.' },
+    { name: 'Mushroom / custom cards', area: 'Dashboard', plat: 'HA', depth: 'Advanced', ha: 'HACS ecosystem provides chip cards, animated tiles, mini-graph-card, ApexCharts, and more.', hub: 'Not applicable. No equivalent third-party dashboard layer.', key: 'With HACS, HA dashboards can match commercial smart home panels in quality.' },
+    { name: 'MQTT broker integration', area: 'Integrations', plat: 'HA', depth: 'Advanced', ha: 'Mosquitto add-on runs inside HA. MQTT discovery auto-registers ESPHome and Tasmota devices.', hub: 'MQTT support via community app, but no native broker and no auto-discovery.', key: 'HA + Mosquitto + ESPHome is a powerful local device ecosystem.' },
+    { name: 'ESPHome device support', area: 'Hardware', plat: 'HA', depth: 'Advanced', ha: 'Native ESPHome integration. Custom ESP32/ESP8266 firmware compiled and managed inside HA.', hub: 'Community workaround only. No native ESPHome integration.', key: 'ESPHome lets you build custom sensors, relays, and buttons that talk to HA natively.' },
+    { name: 'REST API / webhooks', area: 'Developer', plat: 'HA', depth: 'Advanced', ha: 'Full REST API, WebSocket API, and webhook triggers. Long-term token auth.', hub: 'Maker API built-in. Webhooks supported. Simpler surface area but less powerful.', key: 'HA\'s API depth makes external automation and custom dashboards straightforward.' },
+    { name: 'Energy monitoring dashboard', area: 'Dashboard', plat: 'HA', depth: 'Intermediate', ha: 'Built-in Energy dashboard. Track solar, grid, battery, and individual device consumption.', hub: 'No native energy dashboard. Requires external tool or custom app.', key: 'HA energy monitoring is a standout feature for homelab utility tracking.' },
+    { name: 'Voice assistant integration', area: 'Integrations', plat: 'HA', depth: 'Beginner', ha: 'Alexa, Google, and Apple Home via HA Cloud or Nabu Casa. Local Assist for offline voice.', hub: 'Alexa and Google via community integrations. No offline voice option.', key: 'HA Assist enables local, private voice control without any cloud.' },
+    { name: 'Add-on / container ecosystem', area: 'Developer', plat: 'HA', depth: 'Advanced', ha: 'HA OS supports add-ons (Docker containers) managed from the UI. Node-RED, Frigate, Zigbee2MQTT.', hub: 'Closed hardware ecosystem. No containerized add-on layer.', key: 'HA supervised installs on general hardware unlock the full add-on ecosystem.' },
+    { name: 'Presence detection', area: 'Automation', plat: 'Both', depth: 'Intermediate', ha: 'Companion app geofencing, BLE scanning, WiFi device tracking, UWB. Multiple methods combinable.', hub: 'Mobile app geofencing + community presence apps. Less method variety.', key: 'HA\'s multi-method presence fusion is more reliable than any single method.' },
+    { name: 'Camera and NVR integration', area: 'Integrations', plat: 'HA', depth: 'Intermediate', ha: 'Frigate NVR add-on with AI object detection. Native streams in Lovelace. ONVIF support.', hub: 'Basic camera integration. No NVR or AI detection layer.', key: 'Frigate on HA turns any RTSP camera into a smart motion detection system.' },
+    { name: 'Backup and restore', area: 'Local', plat: 'Both', depth: 'Beginner', ha: 'Built-in backup to local or cloud. Partial or full snapshot. Easy migration between hardware.', hub: 'Built-in hub backup. Restore to same or replacement hardware. Simple but limited.', key: 'HA backups include add-on configs; migrations are straightforward.' },
+    { name: 'Lutron RadioRA2 / Caseta', area: 'Integrations', plat: 'Both', depth: 'Intermediate', ha: 'Supported via Lutron integration. Requires Lutron Smart Bridge Pro.', hub: 'Native Lutron support without Smart Bridge Pro requirement on newer hubs.', key: 'Hubitat has a slight edge for native Lutron integration quality.' },
+  ];
+
+  const body = document.getElementById('tableBody');
+  const search = document.getElementById('search');
+  const areaFilter = document.getElementById('areaFilter');
+  const platFilter = document.getElementById('platFilter');
+  const depthFilter = document.getElementById('depthFilter');
+
+  const platClass = { HA: 'p-ha', Hubitat: 'p-hubitat', Both: 'p-both', Neither: 'p-neither' };
+  const depthColor = { 'Beginner': 'var(--green)', 'Intermediate': 'var(--cyan)', 'Advanced': 'var(--purple)' };
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch]));
+  }
+
+  function render() {
+    const q = search.value.trim().toLowerCase();
+    const area = areaFilter.value;
+    const plat = platFilter.value;
+    const depth = depthFilter.value;
+
+    const filtered = rows.filter(r => {
+      const hay = [r.name, r.area, r.plat, r.depth, r.ha, r.hub, r.key].join(' ').toLowerCase();
+      return (!q || hay.includes(q)) &&
+             (area === 'all' || r.area === area) &&
+             (plat === 'all' || r.plat === plat) &&
+             (depth === 'all' || r.depth === depth);
+    });
+
+    body.innerHTML = filtered.map(r => `
+      <tr>
+        <td>
+          <div class="feature-name">${escapeHtml(r.name)}</div>
+          <span class="platform-tag ${platClass[r.plat]}">${r.plat === 'HA' ? 'Home Assistant wins' : r.plat === 'Hubitat' ? 'Hubitat wins' : r.plat === 'Both' ? 'Both strong' : 'Depends'}</span>
+        </td>
+        <td style="color:var(--text-soft);font-size:.83rem">${escapeHtml(r.ha)}</td>
+        <td style="color:var(--text-soft);font-size:.83rem">${escapeHtml(r.hub)}</td>
+        <td style="color:var(--text-soft);font-size:.82rem;font-style:italic">${escapeHtml(r.key)}</td>
+        <td style="font-family:'Space Mono',monospace;font-size:.68rem;color:${depthColor[r.depth]}">${escapeHtml(r.depth)}</td>
+      </tr>
+    `).join('') || `<tr><td colspan="5" style="padding:24px 16px;color:var(--text-faint);font-family:'Space Mono',monospace;font-size:.78rem">No results. Try different filters.</td></tr>`;
+  }
+
+  search.addEventListener('input', render);
+  areaFilter.addEventListener('change', render);
+  platFilter.addEventListener('change', render);
+  depthFilter.addEventListener('change', render);
+  render();
+
+  (() => {
+    const select = document.getElementById('themeSelect');
+    const storageKey = `layout-theme:${location.pathname.split('/').pop() || 'home_automation_map.html'}`;
+
+    function applyTheme(value) {
+      if (value && value !== 'default') {
+        document.body.dataset.theme = value;
+      } else {
+        document.body.removeAttribute('data-theme');
+      }
+      select.value = value || 'default';
+    }
+
+    applyTheme(localStorage.getItem(storageKey) || 'default');
+
+    select.addEventListener('change', (event) => {
+      const value = event.target.value;
+      localStorage.setItem(storageKey, value);
+      applyTheme(value);
+      render();
+    });
+  })();
+</script>
+</body>
+</html>

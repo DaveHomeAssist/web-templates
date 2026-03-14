@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phase Roadmap</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Syne+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a1008;
+      --surface: #111a0f;
+      --surface-2: #182314;
+      --text: #e8f0e0;
+      --muted: #6a8060;
+      --line: #1e2e18;
+      --green: #7ac142;
+      --green-dim: rgba(122,193,66,.08);
+      --yellow: #d4e84a;
+      --orange: #e8962a;
+      --red: #e84a4a;
+      --radius: 4px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    body[data-theme="violet"] {
+      --bg: #0e0914;
+      --surface: #171020;
+      --surface-2: #21172d;
+      --text: #f0e7fb;
+      --muted: #8b79a4;
+      --line: #312246;
+      --green: #b17cff;
+      --green-dim: rgba(177,124,255,.08);
+      --yellow: #e6c85b;
+      --orange: #ff9b6a;
+      --red: #ff6d91;
+    }
+    body[data-theme="ember"] {
+      --bg: #120b08;
+      --surface: #1c120f;
+      --surface-2: #281a16;
+      --text: #f4e8df;
+      --muted: #9f7e6e;
+      --line: #3a241d;
+      --green: #ff8a3d;
+      --green-dim: rgba(255,138,61,.08);
+      --yellow: #f4c95d;
+      --orange: #ff9f43;
+      --red: #ff6b57;
+    }
+    .wrap { max-width: 1340px; margin: 0 auto; padding: 40px 28px 80px; }
+    .theme-switcher {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: 0 14px 30px rgba(0,0,0,.18);
+    }
+    .theme-switcher label {
+      font-family: 'Syne Mono', monospace;
+      font-size: .64rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .theme-switcher select {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font: inherit;
+      font-size: .84rem;
+    }
+    .theme-switcher select:focus-visible {
+      outline: 2px solid var(--green);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    .theme-switcher option { background: var(--surface); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 32px;
+      margin-bottom: 36px;
+    }
+    .eyebrow {
+      font-family: 'Syne Mono', monospace;
+      font-size: .68rem;
+      letter-spacing: .2em;
+      color: var(--green);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.6rem);
+      font-weight: 800;
+      line-height: .95;
+      letter-spacing: -.04em;
+      text-transform: uppercase;
+    }
+    .hero-sub {
+      font-size: .9rem;
+      color: var(--muted);
+      font-weight: 400;
+      margin-top: 14px;
+      max-width: 600px;
+      line-height: 1.7;
+    }
+    .progress-ring { text-align: right; }
+    .ring-label {
+      font-family: 'Syne Mono', monospace;
+      font-size: .68rem;
+      letter-spacing: .12em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .big-pct {
+      font-size: 3.8rem;
+      font-weight: 800;
+      color: var(--green);
+      line-height: 1;
+      letter-spacing: -.04em;
+    }
+    .big-pct span { font-size: 1.4rem; font-weight: 500; }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      font-family: 'Syne', sans-serif;
+      font-size: .78rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 7px 14px;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: var(--radius);
+      transition: all .15s;
+    }
+    .filter-btn.active { background: var(--green); color: #0a1008; border-color: var(--green); }
+    .filter-btn:hover:not(.active) { border-color: var(--green); color: var(--text); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .timeline { display: grid; gap: 0; }
+    .phase-block {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .phase-header {
+      appearance: none;
+      border: none;
+      width: 100%;
+      font: inherit;
+      color: inherit;
+      text-align: left;
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      cursor: pointer;
+      background: var(--surface);
+      transition: background .15s;
+    }
+    .phase-header:hover { background: var(--surface-2); }
+    .phase-header:focus-visible {
+      outline: 2px solid var(--green);
+      outline-offset: -2px;
+    }
+    .phase-num {
+      font-family: 'Syne Mono', monospace;
+      font-size: .7rem;
+      color: var(--muted);
+      min-width: 28px;
+    }
+    .phase-title-group {}
+    .phase-title { font-size: 1rem; font-weight: 700; letter-spacing: -.01em; }
+    .phase-dates { font-family: 'Syne Mono', monospace; font-size: .68rem; color: var(--muted); margin-top: 2px; }
+    .phase-meta { display: flex; gap: 8px; align-items: center; }
+    .task-count {
+      font-family: 'Syne Mono', monospace;
+      font-size: .72rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .status-badge {
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+    .s-complete { background: rgba(122,193,66,.15); color: #7ac142; border: 1px solid rgba(122,193,66,.3); }
+    .s-active { background: rgba(212,232,74,.12); color: #d4e84a; border: 1px solid rgba(212,232,74,.3); }
+    .s-upcoming { background: rgba(106,128,96,.1); color: var(--muted); border: 1px solid var(--line); }
+    .s-blocked { background: rgba(232,74,74,.1); color: #e84a4a; border: 1px solid rgba(232,74,74,.2); }
+
+    .progress-bar-outer {
+      height: 3px;
+      background: var(--line);
+    }
+    .progress-bar-fill { height: 100%; background: var(--green); transition: width .3s; }
+
+    .phase-body {
+      display: none;
+      padding: 0 20px 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+    }
+    .phase-body.open { display: block; }
+
+    .task-list { display: grid; gap: 8px; margin-top: 14px; }
+    .task-item {
+      display: grid;
+      grid-template-columns: 16px 1fr auto auto;
+      gap: 10px;
+      align-items: baseline;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: .86rem;
+    }
+    .task-item:last-child { border-bottom: none; }
+    .task-check { width: 14px; height: 14px; border: 1.5px solid var(--muted); border-radius: 2px; margin-top: 2px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .task-check.done { background: var(--green); border-color: var(--green); }
+    .task-check.done::after { content: '✓'; font-size: 9px; color: #0a1008; font-weight: 700; }
+    .task-name { color: var(--text); line-height: 1.4; }
+    .task-name.done-text { color: var(--muted); text-decoration: line-through; }
+    .task-owner { font-family: 'Syne Mono', monospace; font-size: .7rem; color: var(--muted); white-space: nowrap; }
+    .task-effort { font-family: 'Syne Mono', monospace; font-size: .7rem; color: var(--muted); white-space: nowrap; }
+
+    .phase-notes {
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: var(--surface-2);
+      border-left: 2px solid var(--green);
+      font-size: .82rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .chevron {
+      font-size: .7rem;
+      color: var(--muted);
+      transition: transform .2s;
+    }
+    .chevron.open { transform: rotate(90deg); }
+
+    .sidebar { display: grid; gap: 12px; }
+    .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+    .panel-head {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--line);
+      font-family: 'Syne Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .panel-body { padding: 14px 16px; }
+
+    .stat-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat { background: var(--surface-2); border-radius: var(--radius); padding: 12px; }
+    .stat-n { font-size: 1.8rem; font-weight: 800; color: var(--text); line-height: 1; }
+    .stat-l { font-size: .72rem; color: var(--muted); margin-top: 4px; }
+
+    .legend { display: grid; gap: 8px; }
+    .leg-row { display: flex; align-items: center; gap: 10px; font-size: .82rem; color: var(--muted); }
+    .leg-dot { width: 8px; height: 8px; border-radius: 1px; flex-shrink: 0; }
+
+    @media (max-width: 1060px) {
+      .layout { grid-template-columns: 1fr; }
+      .hero { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 700px) {
+      .theme-switcher {
+        position: static;
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        border-radius: var(--radius);
+      }
+    }
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <div class="theme-switcher">
+    <label for="themeSelect">Scheme</label>
+    <select id="themeSelect" aria-label="Select color scheme">
+      <option value="default">Forest</option>
+      <option value="violet">Violet</option>
+      <option value="ember">Ember</option>
+    </select>
+  </div>
+
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Layout 05 — Phase Roadmap</div>
+      <h1>Project Phase<br>Roadmap</h1>
+      <p class="hero-sub">Expandable phase blocks with task-level detail, ownership, effort estimates, and status. Filter by phase status. Click any phase to drill into its task list.</p>
+    </div>
+    <div class="progress-ring">
+      <div class="ring-label">Overall progress</div>
+      <div class="big-pct" id="overallPct">—<span>%</span></div>
+    </div>
+  </header>
+
+  <div class="filter-row">
+    <button class="filter-btn active" data-filter="all">All phases</button>
+    <button class="filter-btn" data-filter="Complete">Complete</button>
+    <button class="filter-btn" data-filter="Active">Active</button>
+    <button class="filter-btn" data-filter="Upcoming">Upcoming</button>
+    <button class="filter-btn" data-filter="Blocked">Blocked</button>
+  </div>
+
+  <div class="layout">
+    <section class="timeline" id="timeline" aria-label="Project phases"></section>
+
+    <aside class="sidebar">
+      <div class="panel">
+        <div class="panel-head">Summary</div>
+        <div class="panel-body">
+          <div class="stat-pair">
+            <div class="stat"><div class="stat-n" id="totalTasks">—</div><div class="stat-l">total tasks</div></div>
+            <div class="stat"><div class="stat-n" id="doneTasks">—</div><div class="stat-l">completed</div></div>
+            <div class="stat"><div class="stat-n" id="phases">5</div><div class="stat-l">phases</div></div>
+            <div class="stat"><div class="stat-n" id="weeksLeft">—</div><div class="stat-l">wks remaining</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">Status legend</div>
+        <div class="panel-body">
+          <div class="legend">
+            <div class="leg-row"><div class="leg-dot" style="background:#7ac142"></div>Complete — all tasks done</div>
+            <div class="leg-row"><div class="leg-dot" style="background:#d4e84a"></div>Active — currently in progress</div>
+            <div class="leg-row"><div class="leg-dot" style="background:#3a5030"></div>Upcoming — not yet started</div>
+            <div class="leg-row"><div class="leg-dot" style="background:#e84a4a"></div>Blocked — dependency unresolved</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">Quick tips</div>
+        <div class="panel-body" style="font-size:.83rem;color:var(--muted);line-height:1.65">
+          <p>Click any phase row to expand its task list. Filter buttons above narrow visible phases by status.</p>
+          <p style="margin-top:8px">The progress bar inside each phase header reflects task completion within that phase only.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+</main>
+<script>
+  const phases = [
+    {
+      title: 'Discovery & Architecture',
+      dates: 'Weeks 1–3',
+      status: 'Complete',
+      progress: 100,
+      weeks: 0,
+      notes: 'Architecture decisions locked. Tech stack confirmed. No outstanding blockers.',
+      tasks: [
+        { name: 'Stakeholder interviews and requirements capture', done: true, owner: 'PM', effort: '3d' },
+        { name: 'Technical architecture decision record', done: true, owner: 'Lead', effort: '2d' },
+        { name: 'Data model v1 design', done: true, owner: 'Arch', effort: '3d' },
+        { name: 'Repo structure and toolchain setup', done: true, owner: 'Dev', effort: '1d' },
+      ]
+    },
+    {
+      title: 'Core Build — Foundation',
+      dates: 'Weeks 4–10',
+      status: 'Complete',
+      progress: 100,
+      weeks: 0,
+      notes: 'All foundation tasks shipped. Auth, DB layer, and CI pipeline stable.',
+      tasks: [
+        { name: 'Authentication and user management', done: true, owner: 'Dev', effort: '5d' },
+        { name: 'Database schema implementation', done: true, owner: 'Dev', effort: '4d' },
+        { name: 'CI/CD pipeline setup (GitHub Actions)', done: true, owner: 'Dev', effort: '2d' },
+        { name: 'Core API endpoints (CRUD)', done: true, owner: 'Dev', effort: '6d' },
+        { name: 'Unit and integration test baseline', done: true, owner: 'QA', effort: '3d' },
+      ]
+    },
+    {
+      title: 'Feature Development',
+      dates: 'Weeks 11–20',
+      status: 'Active',
+      progress: 60,
+      weeks: 4,
+      notes: 'Dashboard and export features in review. Notification system delayed by 3rd-party API rate limit documentation gap.',
+      tasks: [
+        { name: 'Dashboard UI — overview cards and filters', done: true, owner: 'FE', effort: '5d' },
+        { name: 'Data export (CSV, JSON)', done: true, owner: 'Dev', effort: '2d' },
+        { name: 'User notification system', done: false, owner: 'Dev', effort: '4d' },
+        { name: 'Search and advanced filtering', done: false, owner: 'FE', effort: '3d' },
+        { name: 'Role-based access control', done: false, owner: 'Dev', effort: '4d' },
+      ]
+    },
+    {
+      title: 'QA, Performance & Hardening',
+      dates: 'Weeks 21–26',
+      status: 'Upcoming',
+      progress: 0,
+      weeks: 6,
+      notes: 'Depends on Feature Development completion. Load testing environment needs provisioning before week 21.',
+      tasks: [
+        { name: 'End-to-end test suite (Playwright)', done: false, owner: 'QA', effort: '5d' },
+        { name: 'Load testing — 10K concurrent target', done: false, owner: 'Dev', effort: '3d' },
+        { name: 'Security audit and penetration test', done: false, owner: 'Sec', effort: '5d' },
+        { name: 'Performance budget enforcement', done: false, owner: 'FE', effort: '2d' },
+        { name: 'Accessibility audit (WCAG 2.1 AA)', done: false, owner: 'QA', effort: '2d' },
+      ]
+    },
+    {
+      title: 'Launch & Post-Launch',
+      dates: 'Weeks 27–34',
+      status: 'Upcoming',
+      progress: 0,
+      weeks: 10,
+      notes: 'Go-live gated on QA sign-off. Runbook and rollback plan required before launch window opens.',
+      tasks: [
+        { name: 'Production environment provisioning', done: false, owner: 'Ops', effort: '3d' },
+        { name: 'Runbook and rollback documentation', done: false, owner: 'Lead', effort: '2d' },
+        { name: 'Staged rollout (10% → 50% → 100%)', done: false, owner: 'Ops', effort: '2d' },
+        { name: 'Post-launch monitoring baseline (30d)', done: false, owner: 'Ops', effort: '5d' },
+        { name: 'Retrospective and knowledge capture', done: false, owner: 'PM', effort: '1d' },
+      ]
+    },
+  ];
+
+  const statusClass = { Complete: 's-complete', Active: 's-active', Upcoming: 's-upcoming', Blocked: 's-blocked' };
+  let activeFilter = 'all';
+  const openPhases = new Set();
+  const timeline = document.getElementById('timeline');
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch]));
+  }
+
+  function render() {
+    const filtered = phases.filter(p => activeFilter === 'all' || p.status === activeFilter);
+
+    const allTasks = phases.flatMap(p => p.tasks);
+    const doneTasks = allTasks.filter(t => t.done);
+    const overallPct = Math.round(doneTasks.length / allTasks.length * 100);
+    document.getElementById('overallPct').innerHTML = `${overallPct}<span>%</span>`;
+    document.getElementById('totalTasks').textContent = allTasks.length;
+    document.getElementById('doneTasks').textContent = doneTasks.length;
+    const weeksLeft = phases.filter(p => p.status !== 'Complete').reduce((s, p) => s + p.weeks, 0);
+    document.getElementById('weeksLeft').textContent = weeksLeft;
+
+    timeline.innerHTML = filtered.map((p) => {
+      const phaseIndex = phases.indexOf(p);
+      const isOpen = openPhases.has(phaseIndex);
+      const doneCt = p.tasks.filter(t => t.done).length;
+      return `
+        <div class="phase-block" data-status="${escapeHtml(p.status)}">
+          <button type="button" class="phase-header" data-phase-idx="${phaseIndex}" aria-expanded="${isOpen ? 'true' : 'false'}">
+            <div class="phase-num">P${phaseIndex + 1}</div>
+            <div class="phase-title-group">
+              <div class="phase-title">${escapeHtml(p.title)}</div>
+              <div class="phase-dates">${escapeHtml(p.dates)}</div>
+            </div>
+            <div class="phase-meta">
+              <span class="task-count">${doneCt}/${p.tasks.length} tasks</span>
+              <span class="status-badge ${statusClass[p.status]}">${escapeHtml(p.status)}</span>
+            </div>
+            <div class="chevron ${isOpen ? 'open' : ''}">▶</div>
+          </button>
+          <div class="progress-bar-outer"><div class="progress-bar-fill" style="width:${p.progress}%"></div></div>
+          <div class="phase-body ${isOpen ? 'open' : ''}">
+            <div class="task-list">
+              ${p.tasks.map(t => `
+                <div class="task-item">
+                  <div class="task-check ${t.done ? 'done' : ''}"></div>
+                  <div class="task-name ${t.done ? 'done-text' : ''}">${escapeHtml(t.name)}</div>
+                  <div class="task-owner">${escapeHtml(t.owner)}</div>
+                  <div class="task-effort">${escapeHtml(t.effort)}</div>
+                </div>
+              `).join('')}
+            </div>
+            <div class="phase-notes">${escapeHtml(p.notes)}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function togglePhase(idx) {
+    if (openPhases.has(idx)) openPhases.delete(idx);
+    else openPhases.add(idx);
+    render();
+  }
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  timeline.addEventListener('click', (event) => {
+    const header = event.target.closest('[data-phase-idx]');
+    if (!header) return;
+    togglePhase(Number(header.dataset.phaseIdx));
+  });
+
+  render();
+
+  (() => {
+    const select = document.getElementById('themeSelect');
+    const storageKey = `layout-theme:${location.pathname.split('/').pop() || 'layout_phase_roadmap.html'}`;
+
+    function applyTheme(value) {
+      if (value && value !== 'default') {
+        document.body.dataset.theme = value;
+      } else {
+        document.body.removeAttribute('data-theme');
+      }
+      select.value = value || 'default';
+    }
+
+    applyTheme(localStorage.getItem(storageKey) || 'default');
+
+    select.addEventListener('change', (event) => {
+      const value = event.target.value;
+      localStorage.setItem(storageKey, value);
+      applyTheme(value);
+      render();
+    });
+  })();
+</script>
+</body>
+</html>

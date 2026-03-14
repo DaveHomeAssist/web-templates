@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Status Board</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,600;1,300&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #e8e4de;
+      --surface: #f2efe9;
+      --surface-2: #ddd9d2;
+      --ink: #1a1816;
+      --muted: #888078;
+      --line: #c8c4bc;
+      --todo: #1a1816;
+      --doing: #1a4a8a;
+      --review: #7a4a00;
+      --done: #1a5a2a;
+      --blocked: #8a1a1a;
+      --radius: 2px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    body[data-theme="slate"] {
+      --bg: #e4ebf0;
+      --surface: #f5f8fb;
+      --surface-2: #d8e1e9;
+      --ink: #16202a;
+      --muted: #6a7a89;
+      --line: #bfcbd6;
+      --todo: #16202a;
+      --doing: #2a5ea8;
+      --review: #a66a1f;
+      --done: #2a7a52;
+      --blocked: #b23a3a;
+    }
+    body[data-theme="sand"] {
+      --bg: #efe5d8;
+      --surface: #fbf5ec;
+      --surface-2: #dfd0bf;
+      --ink: #241c14;
+      --muted: #7e7062;
+      --line: #c9b7a4;
+      --todo: #241c14;
+      --doing: #7d4cc7;
+      --review: #b36d1a;
+      --done: #3e7f47;
+      --blocked: #b4453d;
+    }
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 36px 28px 80px; }
+    .theme-switcher {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: 0 14px 30px rgba(0,0,0,.12);
+    }
+    .theme-switcher label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: .64rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .theme-switcher select {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font: inherit;
+      font-size: .84rem;
+    }
+    .theme-switcher select:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    .theme-switcher option { background: var(--surface); }
+
+    .hero {
+      margin-bottom: 28px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 24px;
+      padding-bottom: 20px;
+      border-bottom: 3px solid var(--ink);
+    }
+    .overline {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: .68rem;
+      letter-spacing: .2em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 600;
+      line-height: 1;
+      letter-spacing: -.03em;
+    }
+    .hero-sub { font-size: .9rem; color: var(--muted); margin-top: 10px; font-weight: 300; max-width: 560px; line-height: 1.65; }
+    .hero-right { text-align: right; }
+    .total-items { font-family: 'IBM Plex Mono', monospace; font-size: 2.6rem; font-weight: 600; color: var(--ink); line-height: 1; }
+    .total-label { font-size: .72rem; color: var(--muted); font-family: 'IBM Plex Mono', monospace; letter-spacing: .1em; }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .tb-label { font-family: 'IBM Plex Mono', monospace; font-size: .7rem; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
+    .tb-search {
+      background: var(--surface);
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: .88rem;
+      color: var(--ink);
+      width: 240px;
+    }
+    .tb-search:focus-visible, .tb-select:focus-visible {
+      border-color: var(--ink);
+      outline: 2px solid var(--ink);
+      outline-offset: 2px;
+    }
+    .tb-select {
+      background: var(--surface);
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: .88rem;
+      color: var(--ink);
+    }
+    .tb-select option { background: #f2efe9; }
+    .tb-sep { width: 1px; height: 24px; background: var(--line); }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+    .column {
+      background: var(--surface);
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius);
+    }
+    .col-header {
+      padding: 12px 14px;
+      border-bottom: 3px solid;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .col-todo .col-header { border-color: var(--todo); }
+    .col-doing .col-header { border-color: var(--doing); }
+    .col-review .col-header { border-color: var(--review); }
+    .col-done .col-header { border-color: var(--done); }
+    .col-blocked .col-header { border-color: var(--blocked); }
+
+    .col-name {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .col-count {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: .82rem;
+      color: var(--muted);
+      background: var(--surface-2);
+      padding: 2px 7px;
+      border-radius: 2px;
+    }
+
+    .col-body { padding: 10px; display: grid; gap: 8px; min-height: 80px; }
+
+    .card {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px 13px;
+      transition: box-shadow .1s;
+    }
+    .card:hover { box-shadow: 3px 3px 0 var(--line); transform: translate(-1px, -1px); }
+    .card-id {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: .65rem;
+      color: var(--muted);
+      letter-spacing: .06em;
+      margin-bottom: 5px;
+    }
+    .card-title { font-size: .88rem; font-weight: 600; line-height: 1.35; margin-bottom: 8px; }
+    .card-meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .card-tag {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: .62rem;
+      padding: 2px 6px;
+      border-radius: 2px;
+      font-weight: 600;
+      letter-spacing: .04em;
+      border: 1px solid;
+    }
+    .tag-feat { background: rgba(26,74,138,.08); color: #1a4a8a; border-color: rgba(26,74,138,.2); }
+    .tag-bug { background: rgba(138,26,26,.08); color: #8a1a1a; border-color: rgba(138,26,26,.2); }
+    .tag-chore { background: rgba(100,96,88,.08); color: #605c54; border-color: rgba(100,96,88,.2); }
+    .tag-docs { background: rgba(26,90,42,.08); color: #1a5a2a; border-color: rgba(26,90,42,.2); }
+    .card-owner {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: .65rem;
+      color: var(--muted);
+      margin-left: auto;
+    }
+    .priority-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .p-high { background: #c0392b; }
+    .p-med { background: #e67e22; }
+    .p-low { background: #95a5a6; }
+
+    .empty-col {
+      padding: 14px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: .72rem;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: .06em;
+    }
+
+    @media (max-width: 1100px) { .board { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 700px) {
+      .theme-switcher {
+        position: static;
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        border-radius: var(--radius);
+      }
+    }
+    @media (max-width: 720px) { .board { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <div class="theme-switcher">
+    <label for="themeSelect">Scheme</label>
+    <select id="themeSelect" aria-label="Select color scheme">
+      <option value="default">Concrete</option>
+      <option value="slate">Slate</option>
+      <option value="sand">Sand</option>
+    </select>
+  </div>
+
+  <header class="hero">
+    <div>
+      <div class="overline">Layout 06 — Status Board</div>
+      <h1>Project Status Board</h1>
+      <p class="hero-sub">Kanban-style work status view. Filter by type or owner. Cards show ID, priority, type tag, and assignee at a glance.</p>
+    </div>
+    <div class="hero-right">
+      <div class="total-items" id="totalCount">—</div>
+      <div class="total-label">items total</div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <span class="tb-label">Filter</span>
+    <label class="sr-only" for="search">Search items</label>
+    <input class="tb-search" id="search" type="text" placeholder="Search items..." />
+    <div class="tb-sep"></div>
+    <label class="sr-only" for="typeFilter">Filter by type</label>
+    <select class="tb-select" id="typeFilter" aria-label="Filter by type">
+      <option value="all">All types</option>
+      <option value="feat">Feature</option>
+      <option value="bug">Bug</option>
+      <option value="chore">Chore</option>
+      <option value="docs">Docs</option>
+    </select>
+    <label class="sr-only" for="ownerFilter">Filter by owner</label>
+    <select class="tb-select" id="ownerFilter" aria-label="Filter by owner">
+      <option value="all">All owners</option>
+      <option value="Dave">Dave</option>
+      <option value="Alex">Alex</option>
+      <option value="Sam">Sam</option>
+      <option value="Jo">Jo</option>
+    </select>
+    <label class="sr-only" for="priorityFilter">Filter by priority</label>
+    <select class="tb-select" id="priorityFilter" aria-label="Filter by priority">
+      <option value="all">All priorities</option>
+      <option value="high">High</option>
+      <option value="med">Medium</option>
+      <option value="low">Low</option>
+    </select>
+  </div>
+
+  <section class="board" id="board" aria-label="Status board"></section>
+
+</main>
+<script>
+  const items = [
+    { id: 'PLB-001', title: 'Dexie.js storage layer — prompt read/write', status: 'done', type: 'feat', owner: 'Dave', priority: 'high' },
+    { id: 'PLB-002', title: 'Extension manifest v3 migration', status: 'done', type: 'chore', owner: 'Dave', priority: 'high' },
+    { id: 'PLB-003', title: 'Prompt list UI — search and filter', status: 'done', type: 'feat', owner: 'Dave', priority: 'high' },
+    { id: 'PLB-004', title: 'Tag taxonomy schema', status: 'done', type: 'feat', owner: 'Dave', priority: 'med' },
+    { id: 'PLB-005', title: 'DaveLLM Router v2 integration shim', status: 'doing', type: 'feat', owner: 'Dave', priority: 'high' },
+    { id: 'PLB-006', title: 'Variable injection parser ({{var}} syntax)', status: 'doing', type: 'feat', owner: 'Alex', priority: 'high' },
+    { id: 'PLB-007', title: 'Side panel layout refactor', status: 'doing', type: 'chore', owner: 'Dave', priority: 'med' },
+    { id: 'PLB-008', title: 'Prompt pack export as JSON', status: 'review', type: 'feat', owner: 'Sam', priority: 'med' },
+    { id: 'PLB-009', title: 'Keyboard shortcut system', status: 'review', type: 'feat', owner: 'Dave', priority: 'med' },
+    { id: 'PLB-010', title: 'Onboarding flow — first run wizard', status: 'todo', type: 'feat', owner: 'Alex', priority: 'med' },
+    { id: 'PLB-011', title: 'Usage analytics (local only, no telemetry)', status: 'todo', type: 'feat', owner: 'Sam', priority: 'low' },
+    { id: 'PLB-012', title: 'promptrefinery.dev landing page', status: 'todo', type: 'feat', owner: 'Dave', priority: 'high' },
+    { id: 'PLB-013', title: 'API key storage — secure enclave', status: 'blocked', type: 'feat', owner: 'Dave', priority: 'high' },
+    { id: 'PLB-014', title: 'IndexedDB migration script v1→v2', status: 'blocked', type: 'chore', owner: 'Dave', priority: 'high' },
+    { id: 'PLB-015', title: 'Inline diff view for prompt versions', status: 'todo', type: 'feat', owner: 'Alex', priority: 'low' },
+    { id: 'PLB-016', title: 'Fix: tag filter clears on route change', status: 'doing', type: 'bug', owner: 'Sam', priority: 'high' },
+    { id: 'PLB-017', title: 'Prompt pack README template', status: 'todo', type: 'docs', owner: 'Jo', priority: 'low' },
+    { id: 'PLB-018', title: 'Fix: duplicate prompt IDs on import', status: 'review', type: 'bug', owner: 'Alex', priority: 'high' },
+    { id: 'PLB-019', title: 'Model selector dropdown component', status: 'done', type: 'feat', owner: 'Alex', priority: 'med' },
+    { id: 'PLB-020', title: 'CHANGELOG and release notes format', status: 'todo', type: 'docs', owner: 'Jo', priority: 'low' },
+  ];
+
+  const columns = [
+    { key: 'todo', label: 'To Do', cls: 'col-todo' },
+    { key: 'doing', label: 'In Progress', cls: 'col-doing' },
+    { key: 'review', label: 'In Review', cls: 'col-review' },
+    { key: 'done', label: 'Done', cls: 'col-done' },
+    { key: 'blocked', label: 'Blocked', cls: 'col-blocked' },
+  ];
+
+  const tagClass = { feat: 'tag-feat', bug: 'tag-bug', chore: 'tag-chore', docs: 'tag-docs' };
+  const tagLabel = { feat: 'Feature', bug: 'Bug', chore: 'Chore', docs: 'Docs' };
+  const prioClass = { high: 'p-high', med: 'p-med', low: 'p-low' };
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch]));
+  }
+
+  function render() {
+    const q = document.getElementById('search').value.trim().toLowerCase();
+    const type = document.getElementById('typeFilter').value;
+    const owner = document.getElementById('ownerFilter').value;
+    const priority = document.getElementById('priorityFilter').value;
+
+    const filtered = items.filter(i => {
+      const hay = [i.id, i.title, i.type, i.owner, i.priority].join(' ').toLowerCase();
+      return (!q || hay.includes(q)) &&
+             (type === 'all' || i.type === type) &&
+             (owner === 'all' || i.owner === owner) &&
+             (priority === 'all' || i.priority === priority);
+    });
+
+    document.getElementById('totalCount').textContent = filtered.length;
+
+    document.getElementById('board').innerHTML = columns.map(col => {
+      const cards = filtered.filter(i => i.status === col.key);
+      return `
+        <div class="column ${col.cls}">
+          <div class="col-header">
+            <span class="col-name">${col.label}</span>
+            <span class="col-count">${cards.length}</span>
+          </div>
+          <div class="col-body">
+            ${cards.length === 0 ? '<div class="empty-col">— empty —</div>' :
+              cards.map(c => `
+                <div class="card">
+                    <div class="card-id">${escapeHtml(c.id)}</div>
+                    <div class="card-title">${escapeHtml(c.title)}</div>
+                    <div class="card-meta">
+                      <div class="priority-dot ${prioClass[c.priority]}" title="${c.priority} priority"></div>
+                      <span class="card-tag ${tagClass[c.type]}">${tagLabel[c.type]}</span>
+                      <span class="card-owner">${escapeHtml(c.owner)}</span>
+                    </div>
+                  </div>
+              `).join('')}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  document.getElementById('search').addEventListener('input', render);
+  document.getElementById('typeFilter').addEventListener('change', render);
+  document.getElementById('ownerFilter').addEventListener('change', render);
+  document.getElementById('priorityFilter').addEventListener('change', render);
+  render();
+
+  (() => {
+    const select = document.getElementById('themeSelect');
+    const storageKey = `layout-theme:${location.pathname.split('/').pop() || 'layout_status_board.html'}`;
+
+    function applyTheme(value) {
+      if (value && value !== 'default') {
+        document.body.dataset.theme = value;
+      } else {
+        document.body.removeAttribute('data-theme');
+      }
+      select.value = value || 'default';
+    }
+
+    applyTheme(localStorage.getItem(storageKey) || 'default');
+
+    select.addEventListener('change', (event) => {
+      const value = event.target.value;
+      localStorage.setItem(storageKey, value);
+      applyTheme(value);
+      render();
+    });
+  })();
+</script>
+</body>
+</html>

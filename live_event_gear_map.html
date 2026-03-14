@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Event Production Gear Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #100e0a;
+      --surface: #191510;
+      --surface-2: #221d14;
+      --surface-3: #2a2318;
+      --text: #f0e8d8;
+      --muted: #7d7060;
+      --line: #2e2820;
+      --amber: #e8930a;
+      --amber-dim: rgba(232,147,10,.1);
+      --red: #c94a2c;
+      --green: #4a8c5c;
+      --blue: #3a7aaa;
+      --violet: #9278d8;
+      --text-soft: #7d7060;
+      --text-faint: #5a5040;
+      --shadow: rgba(0,0,0,.24);
+      --radius: 4px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    body[data-theme="backstage-crimson"] {
+      --bg: #110b0b;
+      --surface: #1a1112;
+      --surface-2: #24181a;
+      --surface-3: #2f1d20;
+      --text: #f4e6e2;
+      --muted: #aa8b84;
+      --line: #3b2525;
+      --amber: #ff7a59;
+      --amber-dim: rgba(255,122,89,.1);
+      --red: #ff4d4d;
+      --green: #d5b35f;
+      --blue: #7ac6ff;
+      --violet: #d196ff;
+      --text-soft: #aa8b84;
+      --text-faint: #6f5752;
+    }
+    body[data-theme="teal-rig"] {
+      --bg: #081112;
+      --surface: #10191b;
+      --surface-2: #152124;
+      --surface-3: #1b2b2f;
+      --text: #e4f0ed;
+      --muted: #7f9894;
+      --line: #233432;
+      --amber: #3fd0b1;
+      --amber-dim: rgba(63,208,177,.1);
+      --red: #ff7760;
+      --green: #8dd17e;
+      --blue: #63a9ff;
+      --violet: #93a7ff;
+      --text-soft: #8fa7a2;
+      --text-faint: #58706b;
+    }
+    .wrap { max-width: 1420px; margin: 0 auto; padding: 40px 28px 84px; }
+    .theme-switcher {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      box-shadow: 0 14px 30px var(--shadow);
+    }
+    .theme-switcher label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .68rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .theme-switcher select {
+      background: transparent;
+      border: none;
+      color: inherit;
+      font: inherit;
+      font-size: .84rem;
+    }
+    .theme-switcher select:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    .theme-switcher option { background: var(--surface); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      gap: 36px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 28px;
+      margin-bottom: 22px;
+    }
+    .issue-tag {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .75rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .issue-tag::before {
+      content: '';
+      display: inline-block;
+      width: 32px;
+      height: 1px;
+      background: var(--amber);
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4.5vw, 3.5rem);
+      line-height: 1.03;
+      font-weight: 700;
+    }
+    .hero-sub {
+      font-size: .94rem;
+      color: var(--muted);
+      font-weight: 300;
+      margin-top: 12px;
+      max-width: 700px;
+      line-height: 1.72;
+    }
+    .hero-right {
+      display: grid;
+      gap: 10px;
+      min-width: 250px;
+    }
+    .hero-meta-card {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      padding: 14px 16px;
+    }
+    .hero-meta-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .72rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .hero-meta-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      line-height: 1;
+      color: var(--text);
+    }
+    .hero-meta-note {
+      font-size: .78rem;
+      color: var(--text-soft);
+      margin-top: 7px;
+      line-height: 1.5;
+    }
+
+    .controls-wrap {
+      position: sticky;
+      top: 12px;
+      z-index: 20;
+      margin-bottom: 18px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 1.5fr repeat(5, 1fr);
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--bg) 76%, transparent);
+      backdrop-filter: blur(14px);
+    }
+    .ctrl {
+      border: 1px solid var(--line);
+      padding: 12px 14px;
+      background: var(--surface);
+      min-height: 72px;
+    }
+    .ctrl label {
+      display: block;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .72rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .ctrl input, .ctrl select {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      font-size: .9rem;
+      font-weight: 400;
+      width: 100%;
+    }
+    .ctrl input:focus-visible, .ctrl select:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+    .ctrl select option { background: var(--surface); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 18px;
+      align-items: start;
+    }
+    .main-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .table-outer {
+      border: 1px solid var(--line);
+      overflow: auto;
+      background: var(--surface);
+      box-shadow: 0 18px 36px rgba(0,0,0,.08);
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 860px; }
+    th {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .7rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 11px 16px;
+      text-align: left;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      white-space: nowrap;
+    }
+    th button {
+      border: none;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      letter-spacing: inherit;
+      text-transform: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0;
+    }
+    th button:hover { color: var(--text); }
+    th button.active { color: var(--text); }
+    th button.active::after {
+      content: '●';
+      font-size: .58rem;
+      color: var(--amber);
+      line-height: 1;
+    }
+    th button:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 2px;
+    }
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      font-size: .87rem;
+      line-height: 1.5;
+      vertical-align: top;
+    }
+    .gear-row {
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .gear-row:hover td,
+    .gear-row.selected td,
+    .gear-row:focus-within td {
+      background: var(--surface-2);
+    }
+    .row-trigger {
+      display: contents;
+    }
+    .row-focus {
+      display: block;
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      padding: 0;
+      font: inherit;
+      cursor: pointer;
+    }
+    .row-focus:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 3px;
+    }
+    .gear-name {
+      font-weight: 600;
+      font-size: .94rem;
+      color: var(--text);
+      line-height: 1.35;
+    }
+    .gear-subline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .mini-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      font-size: .67rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .dept-tag {
+      display: inline-block;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .68rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border: 1px solid;
+      margin-top: 6px;
+    }
+    .dept-video { color: var(--blue); border-color: color-mix(in srgb, var(--blue) 38%, transparent); }
+    .dept-lighting { color: var(--amber); border-color: color-mix(in srgb, var(--amber) 38%, transparent); }
+    .dept-audio { color: var(--green); border-color: color-mix(in srgb, var(--green) 38%, transparent); }
+    .dept-network { color: var(--red); border-color: color-mix(in srgb, var(--red) 38%, transparent); }
+    .stack-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .stack-pill {
+      display: inline-flex;
+      padding: 2px 8px;
+      border: 1px solid color-mix(in srgb, var(--amber) 22%, var(--line));
+      background: var(--amber-dim);
+      color: var(--amber);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .7rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .risk-badge,
+    .crit-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 94px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .73rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-weight: 700;
+      border: 1px solid;
+    }
+    .risk-critical,
+    .crit-show-critical {
+      background: color-mix(in srgb, var(--red) 16%, transparent);
+      color: var(--red);
+      border-color: color-mix(in srgb, var(--red) 34%, transparent);
+    }
+    .risk-high,
+    .crit-high {
+      background: color-mix(in srgb, var(--amber) 14%, transparent);
+      color: var(--amber);
+      border-color: color-mix(in srgb, var(--amber) 34%, transparent);
+    }
+    .risk-moderate,
+    .crit-medium {
+      background: color-mix(in srgb, var(--green) 16%, transparent);
+      color: var(--green);
+      border-color: color-mix(in srgb, var(--green) 34%, transparent);
+    }
+    .action-col {
+      text-align: right;
+      white-space: nowrap;
+    }
+    .action-link {
+      border: none;
+      background: transparent;
+      color: var(--amber);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .75rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .action-link:hover { color: var(--text); }
+    .empty-state {
+      padding: 28px 20px;
+      color: var(--text-faint);
+      font-size: .84rem;
+    }
+
+    .mobile-cards {
+      display: none;
+      gap: 10px;
+    }
+    .mobile-card {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      padding: 16px;
+    }
+    .mobile-card.selected { background: var(--surface-2); }
+    .mobile-card button {
+      border: none;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      padding: 0;
+      width: 100%;
+      font: inherit;
+      cursor: pointer;
+    }
+    .mobile-card button:focus-visible {
+      outline: 2px solid var(--amber);
+      outline-offset: 3px;
+    }
+    .mobile-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .mobile-meta {
+      display: grid;
+      gap: 7px;
+      font-size: .82rem;
+      color: var(--text-soft);
+    }
+    .mobile-meta strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .sidebar {
+      display: grid;
+      gap: 12px;
+      position: sticky;
+      top: 104px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--surface);
+    }
+    .panel-head {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .72rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .panel-body { padding: 16px; }
+    .panel-body p { font-size: .85rem; color: var(--muted); line-height: 1.65; }
+    .panel-body p + p { margin-top: 10px; }
+    .panel-body strong { color: var(--text); font-weight: 600; }
+
+    .quick-facts {
+      display: grid;
+      gap: 10px;
+    }
+    .fact {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: .84rem;
+    }
+    .fact:last-child { border-bottom: none; padding-bottom: 0; }
+    .fact-label { color: var(--muted); }
+    .fact-val { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    .detail-empty {
+      color: var(--text-faint);
+      font-size: .84rem;
+      line-height: 1.65;
+    }
+    .detail-header {
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 14px;
+    }
+    .detail-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem;
+      line-height: 1.1;
+      color: var(--text);
+    }
+    .detail-sub {
+      font-size: .82rem;
+      color: var(--text-soft);
+      margin-top: 8px;
+    }
+    .detail-block + .detail-block {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+    .detail-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .72rem;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .detail-list,
+    .detail-kv {
+      display: grid;
+      gap: 8px;
+    }
+    .detail-kv-row {
+      display: grid;
+      grid-template-columns: 108px 1fr;
+      gap: 10px;
+      font-size: .83rem;
+      line-height: 1.55;
+    }
+    .detail-k {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-size: .7rem;
+      padding-top: 3px;
+    }
+    .detail-v { color: var(--text-soft); }
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .signal-chip {
+      display: inline-flex;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--text-soft);
+      font-size: .72rem;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .signal-in { border-color: color-mix(in srgb, var(--blue) 30%, var(--line)); color: var(--blue); }
+    .signal-out { border-color: color-mix(in srgb, var(--green) 30%, var(--line)); color: var(--green); }
+    .detail-recovery {
+      background: var(--surface-2);
+      border-left: 2px solid var(--amber);
+      padding: 12px 14px;
+      color: var(--text-soft);
+      font-size: .83rem;
+      line-height: 1.62;
+    }
+    .recovery-list {
+      display: grid;
+      gap: 9px;
+    }
+    .recovery-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: baseline;
+      color: var(--text-soft);
+      font-size: .82rem;
+      line-height: 1.5;
+    }
+    .recovery-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      color: var(--amber);
+      font-size: 1.3rem;
+      line-height: 1;
+      min-width: 20px;
+    }
+
+    @media (max-width: 1220px) {
+      .controls {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 1060px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+      .hero { grid-template-columns: 1fr; }
+      .controls {
+        grid-template-columns: 1fr 1fr;
+      }
+      .hero-right {
+        grid-template-columns: 1fr 1fr;
+        min-width: 0;
+      }
+    }
+    @media (max-width: 700px) {
+      .wrap { padding: 28px 16px 64px; }
+      .theme-switcher {
+        position: static;
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        border-radius: var(--radius);
+      }
+      .controls-wrap {
+        position: static;
+      }
+      .controls {
+        grid-template-columns: 1fr;
+        padding: 0;
+        border: none;
+        background: transparent;
+        backdrop-filter: none;
+      }
+      .table-outer { display: none; }
+      .mobile-cards { display: grid; }
+      .hero-right { grid-template-columns: 1fr; }
+      .risk-badge,
+      .crit-badge {
+        min-width: 0;
+      }
+      .mobile-top .crit-badge {
+        margin-top: 1px;
+      }
+    }
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <div class="theme-switcher">
+    <label for="themeSelect">Scheme</label>
+    <select id="themeSelect" aria-label="Select color scheme">
+      <option value="default">Amber Desk</option>
+      <option value="backstage-crimson">Backstage Crimson</option>
+      <option value="teal-rig">Teal Rig</option>
+    </select>
+  </div>
+
+  <header class="hero">
+    <div>
+      <div class="issue-tag">IATSE Field Reference</div>
+      <h1>Live Event Production<br><em>Gear Stack Map</em></h1>
+      <p class="hero-sub">Operational field guide for video, lighting, audio, and network gear with show-stack filtering, dependency notes, and recovery guidance for live event workflows.</p>
+    </div>
+    <div class="hero-right">
+      <div class="hero-meta-card">
+        <div class="hero-meta-label">Coverage</div>
+        <div class="hero-meta-value" id="coverageDisplay">24</div>
+        <div class="hero-meta-note">Indexed components across signal flow, show control, and recovery planning.</div>
+      </div>
+      <div class="hero-meta-card">
+        <div class="hero-meta-label">Last updated</div>
+        <div class="hero-meta-value">2026</div>
+        <div class="hero-meta-note">Built for IMAG, playback, LED, lighting, Dante, and show sync workflows.</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="controls-wrap">
+    <div class="controls">
+      <div class="ctrl">
+        <label for="search">Search gear or keyword</label>
+        <input id="search" type="text" placeholder="Roland, MA3, Dante, fiber, switcher..." />
+      </div>
+      <div class="ctrl">
+        <label for="deptFilter">Department</label>
+        <select id="deptFilter">
+          <option value="all">All departments</option>
+          <option value="Video">Video</option>
+          <option value="Lighting">Lighting</option>
+          <option value="Audio">Audio</option>
+          <option value="Network">Network / IT</option>
+        </select>
+      </div>
+      <div class="ctrl">
+        <label for="posFilter">Signal path</label>
+        <select id="posFilter">
+          <option value="all">All positions</option>
+          <option value="Source">Source</option>
+          <option value="Processing">Processing</option>
+          <option value="Distribution">Distribution</option>
+          <option value="Output">Output</option>
+        </select>
+      </div>
+      <div class="ctrl">
+        <label for="critFilter">Criticality</label>
+        <select id="critFilter">
+          <option value="all">All tiers</option>
+          <option value="Show-critical">Show-critical</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+        </select>
+      </div>
+      <div class="ctrl">
+        <label for="stackFilter">Show stack</label>
+        <select id="stackFilter">
+          <option value="all">All use cases</option>
+          <option value="IMAG">IMAG</option>
+          <option value="Playback">Corporate Playback</option>
+          <option value="Projection">Projection</option>
+          <option value="LED">LED Wall</option>
+          <option value="Lighting Control">Lighting Control</option>
+          <option value="Audio Network">Audio Network</option>
+          <option value="Show Control">Show Control / Sync</option>
+        </select>
+      </div>
+      <div class="ctrl">
+        <label for="sortFilter">Sort by</label>
+        <select id="sortFilter">
+          <option value="criticality">Criticality</option>
+          <option value="risk">Failure risk</option>
+          <option value="gear">Gear name</option>
+          <option value="department">Department</option>
+          <option value="position">Signal path position</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="main-stack">
+      <section class="table-outer" aria-label="Gear reference table">
+        <table>
+          <thead>
+            <tr>
+              <th><button type="button" data-sort="gear">Gear</button></th>
+              <th>Show stack</th>
+              <th><button type="button" data-sort="position">Signal path</button></th>
+              <th><button type="button" data-sort="risk">Failure risk</button></th>
+              <th><button type="button" data-sort="criticality">Criticality</button></th>
+              <th class="action-col">Details</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </section>
+
+      <section class="mobile-cards" id="mobileCards" aria-label="Gear reference cards"></section>
+    </div>
+
+    <aside class="sidebar">
+      <div class="panel">
+        <div class="panel-head">Show stats</div>
+        <div class="panel-body">
+          <div class="quick-facts">
+            <div class="fact"><span class="fact-label">Gear items shown</span><span class="fact-val" id="countDisplay">24</span></div>
+            <div class="fact"><span class="fact-label">Show-critical</span><span class="fact-val" id="criticalDisplay">9</span></div>
+            <div class="fact"><span class="fact-label">Departments visible</span><span class="fact-val" id="deptDisplay">4</span></div>
+            <div class="fact"><span class="fact-label">Use cases visible</span><span class="fact-val" id="stackDisplay">6</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">Selected gear</div>
+        <div class="panel-body" id="detailPanel">
+          <div class="detail-empty">Select a row to inspect dependencies, signal interfaces, backup path, and field recovery notes.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">Field recovery</div>
+        <div class="panel-body">
+          <div class="recovery-list">
+            <div class="recovery-item"><div class="recovery-num">01</div><div>Projector dark: verify switcher output format, check scaler, confirm HDCP or EDID mismatch before swapping hardware.</div></div>
+            <div class="recovery-item"><div class="recovery-num">02</div><div>Dante chaos: confirm a single clock master, remove unmanaged switches, validate sample rate and QoS path.</div></div>
+            <div class="recovery-item"><div class="recovery-num">03</div><div>MA-Net instability: check IP range, session version parity, and node universe map before touching cue stacks.</div></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+  const rows = [
+    {
+      name: 'Roland V-160HD',
+      dept: 'Video',
+      pos: 'Processing',
+      crit: 'Show-critical',
+      risk: 'High',
+      use: ['IMAG', 'Playback', 'Projection'],
+      signalsIn: ['HDMI', 'HDBaseT', 'SDI'],
+      signalsOut: ['HDMI', 'SDI', 'USB-C'],
+      role: 'Main presentation switcher with input scaling, multiview, and live source routing.',
+      failure: 'Format mismatch on input card; EDID negotiation failures with non-standard sources.',
+      dependsOn: ['Stable sync', 'Correct EDID', 'Known output format'],
+      backupPlan: 'Route priority source direct to projector chain or bypass through a dedicated scaler.',
+      recovery: 'Lock frame rate, verify upstream source resolution, then cold-switch the affected input path.',
+    },
+    {
+      name: 'AJA Ki Pro GO 2',
+      dept: 'Video',
+      pos: 'Output',
+      crit: 'High',
+      risk: 'Moderate',
+      use: ['Playback', 'IMAG'],
+      signalsIn: ['SDI', 'HDMI'],
+      signalsOut: ['SSD media', 'USB export'],
+      role: 'Program and ISO recorder for post, archive, and fast-turn event edits.',
+      failure: 'Card format mismatch across slots; drive speed too slow for high-bitrate multi-channel.',
+      dependsOn: ['Qualified SSDs', 'Matched media formatting', 'Stable program feed'],
+      backupPlan: 'Fallback to HyperDeck or direct program feed recording on playback machine.',
+      recovery: 'Verify media speed, reformat affected slot, and test a two-channel record before returning to full load.',
+    },
+    {
+      name: 'Barco E2 / S3',
+      dept: 'Video',
+      pos: 'Processing',
+      crit: 'Show-critical',
+      risk: 'Critical',
+      use: ['IMAG', 'Projection', 'LED'],
+      signalsIn: ['SDI', 'HDMI', 'DisplayPort'],
+      signalsOut: ['SDI', 'DisplayPort', 'Program feeds'],
+      role: 'Presentation engine for screen management, seamless switching, and composited show looks.',
+      failure: 'Licensing mismatch across units; genlock source dropout causing frame tears.',
+      dependsOn: ['Valid licenses', 'Genlock', 'Programmed presets'],
+      backupPlan: 'Collapse to a simplified screen layout on backup processor or scaler stack.',
+      recovery: 'Confirm genlock source first, then revert to last known good destination and preset set.',
+    },
+    {
+      name: 'Christie / Barco Projector',
+      dept: 'Video',
+      pos: 'Output',
+      crit: 'Show-critical',
+      risk: 'High',
+      use: ['Projection', 'IMAG'],
+      signalsIn: ['HDMI', 'SDI', 'Fiber'],
+      signalsOut: ['Screen image'],
+      role: 'Primary image output for screens, scenic surfaces, and confidence displays.',
+      failure: 'Lamp hours exceeded; lens shift not locked post-focus; signal input card failure.',
+      dependsOn: ['Clean video feed', 'Power sequencing', 'Proper lens alignment'],
+      backupPlan: 'Hot-switch to spare projector or reroute to confidence monitors if scenic output fails.',
+      recovery: 'Check signal presence at projector input before touching optics, then inspect power, lamp, and card state.',
+    },
+    {
+      name: 'LED Wall Processor',
+      dept: 'Video',
+      pos: 'Distribution',
+      crit: 'Show-critical',
+      risk: 'Critical',
+      use: ['LED', 'IMAG'],
+      signalsIn: ['HDMI', 'SDI', 'Fiber'],
+      signalsOut: ['Ethernet to tiles'],
+      role: 'Maps source signal to LED wall layout and controls scaling, brightness, and calibration.',
+      failure: 'Single panel failure visible on surface; power sequencing errors causing full tile dropout.',
+      dependsOn: ['Mapped tile config', 'Panel power order', 'Known source resolution'],
+      backupPlan: 'Bypass to backup processor with reduced canvas size if full surface routing fails.',
+      recovery: 'Validate mapping file, reseat tile run, and confirm output format before repowering processor path.',
+    },
+    {
+      name: 'Decimator MD-HX',
+      dept: 'Video',
+      pos: 'Processing',
+      crit: 'Medium',
+      risk: 'Moderate',
+      use: ['Playback', 'Projection', 'IMAG'],
+      signalsIn: ['HDMI', 'SDI'],
+      signalsOut: ['HDMI', 'SDI'],
+      role: 'Format conversion, scaling, and quick bridge between mismatched sources and destinations.',
+      failure: 'Incorrect input format detection; audio embedding/de-embedding config mismatch.',
+      dependsOn: ['Known source format', 'Correct output target'],
+      backupPlan: 'Swap to spare converter or direct-connect if source and destination can negotiate natively.',
+      recovery: 'Force input/output format manually and reset audio embed settings before replacing the unit.',
+    },
+    {
+      name: 'HDBaseT Extender Set',
+      dept: 'Video',
+      pos: 'Distribution',
+      crit: 'High',
+      risk: 'High',
+      use: ['IMAG', 'Projection', 'Playback'],
+      signalsIn: ['HDMI'],
+      signalsOut: ['HDMI over Cat6'],
+      role: 'Carries display feeds across long venue runs to projectors and confidence monitors.',
+      failure: 'Cable quality below spec; distance exceeding 100m; HDCP negotiation failure.',
+      dependsOn: ['Certified Cat6', 'Distance budget', 'Display handshake'],
+      backupPlan: 'Jump to SDI/fiber path or local scaler near display if HDBaseT run is unstable.',
+      recovery: 'Test with known short cable, disable HDCP where possible, and verify remote receiver power first.',
+    },
+    {
+      name: 'GrandMA3 Full Size',
+      dept: 'Lighting',
+      pos: 'Processing',
+      crit: 'Show-critical',
+      risk: 'Critical',
+      use: ['Lighting Control', 'Show Control'],
+      signalsIn: ['MIDI', 'Timecode', 'Network'],
+      signalsOut: ['MA-Net3', 'Art-Net', 'sACN'],
+      role: 'Primary lighting console handling busking, cue playback, timecode, and networked output.',
+      failure: 'Session conflict in multi-console session; node IP collision on flat network.',
+      dependsOn: ['Clean network plan', 'Matched software version', 'Patched universes'],
+      backupPlan: 'Promote backup console and move output priority to mirrored session node.',
+      recovery: 'Confirm session version parity, isolate conflicting node, and reassert console as session master.',
+    },
+    {
+      name: 'GrandMA3 Light / CMD',
+      dept: 'Lighting',
+      pos: 'Processing',
+      crit: 'High',
+      risk: 'High',
+      use: ['Lighting Control'],
+      signalsIn: ['Network', 'MIDI'],
+      signalsOut: ['MA-Net3', 'sACN'],
+      role: 'Secondary lighting desk for backup, effects, or dedicated programming support.',
+      failure: 'Software version mismatch in session; backup not synced to primary when primary fails.',
+      dependsOn: ['Session sync', 'Network stability'],
+      backupPlan: 'Use local showfile and output directly through dedicated node if session cannot rejoin.',
+      recovery: 'Verify showfile freshness, session status, and output authority before taking over control.',
+    },
+    {
+      name: 'MA3 NPU / onPC Node',
+      dept: 'Lighting',
+      pos: 'Distribution',
+      crit: 'High',
+      risk: 'High',
+      use: ['Lighting Control'],
+      signalsIn: ['MA-Net3'],
+      signalsOut: ['DMX'],
+      role: 'Converts lighting network traffic into DMX universes at the rig.',
+      failure: 'Node IP conflict; universe assignment overlapping with another NPU; firmware mismatch.',
+      dependsOn: ['Stable network', 'Mapped universes', 'Consistent firmware'],
+      backupPlan: 'Shift universes to backup node or direct output from console if capacity exists.',
+      recovery: 'Check IP and universe map, then swap to spare node before repatching fixtures.',
+    },
+    {
+      name: 'Robe / Martin Moving Head',
+      dept: 'Lighting',
+      pos: 'Output',
+      crit: 'Medium',
+      risk: 'Moderate',
+      use: ['Lighting Control'],
+      signalsIn: ['DMX', 'Power'],
+      signalsOut: ['Light output'],
+      role: 'Automated fixture providing movement, beam, color, and scenic effects.',
+      failure: 'Fixture home position drift; DMX address conflict; power sequencing tripping breakers.',
+      dependsOn: ['Correct addressing', 'Clean power', 'Fixture mode parity'],
+      backupPlan: 'Disable affected fixture and redistribute looks across neighboring units.',
+      recovery: 'Re-home fixture, confirm address/mode, and test on clean power before escalating to swap.',
+    },
+    {
+      name: 'LED Uplighting / Strip',
+      dept: 'Lighting',
+      pos: 'Output',
+      crit: 'Medium',
+      risk: 'Moderate',
+      use: ['Lighting Control'],
+      signalsIn: ['DMX', 'Wireless DMX', 'Power'],
+      signalsOut: ['Light output'],
+      role: 'Ambient and scenic audience wash with wired or battery wireless control.',
+      failure: 'Wireless DMX interference; battery failure mid-show on wireless units.',
+      dependsOn: ['Battery management', 'Wireless spectrum', 'Scene presets'],
+      backupPlan: 'Fallback to wired look or static failsafe scene if wireless control drops.',
+      recovery: 'Swap battery first, then verify wireless universe and transmitter placement.',
+    },
+    {
+      name: 'DiGiCo SD / Quantum',
+      dept: 'Audio',
+      pos: 'Processing',
+      crit: 'Show-critical',
+      risk: 'Critical',
+      use: ['Audio Network', 'IMAG'],
+      signalsIn: ['MADI', 'Dante', 'Analog'],
+      signalsOut: ['MADI', 'Dante', 'Matrix buses'],
+      role: 'FOH or monitor desk for complex corporate and broadcast-style audio routing.',
+      failure: 'Session file incompatibility across console versions; MADI cable failure to stagebox.',
+      dependsOn: ['Compatible session file', 'Stagebox link', 'Clock integrity'],
+      backupPlan: 'Move key channels to backup desk or emergency analog split for program-critical sources.',
+      recovery: 'Confirm software/session version, then verify stagebox clock and transport before repatching inputs.',
+    },
+    {
+      name: 'Yamaha QL / CL Series',
+      dept: 'Audio',
+      pos: 'Processing',
+      crit: 'Show-critical',
+      risk: 'High',
+      use: ['Audio Network', 'Playback'],
+      signalsIn: ['Dante', 'Analog'],
+      signalsOut: ['Dante', 'Stereo buses', 'Matrix outputs'],
+      role: 'Corporate and worship digital console with strong Dante-native routing.',
+      failure: 'Dante clock source conflict; word clock mismatch with external gear.',
+      dependsOn: ['Single clock master', 'Dante Controller routing'],
+      backupPlan: 'Fallback to local analog I/O and emergency stereo mix until Dante path stabilizes.',
+      recovery: 'Check clock master first, then inspect sample rate and patch subscriptions.',
+    },
+    {
+      name: 'Dante Network (Audinate)',
+      dept: 'Audio',
+      pos: 'Distribution',
+      crit: 'Show-critical',
+      risk: 'Critical',
+      use: ['Audio Network', 'Show Control'],
+      signalsIn: ['Ethernet audio'],
+      signalsOut: ['Ethernet audio'],
+      role: 'Audio-over-IP backbone carrying routing, patching, and sync across the show.',
+      failure: 'Clock source conflict; unmanaged switch in path; QoS not set.',
+      dependsOn: ['Managed switches', 'QoS', 'Stable clock master'],
+      backupPlan: 'Collapse to local analog or MADI submix for mission-critical feeds.',
+      recovery: 'Identify clock master, remove unmanaged gear, and validate switch QoS before repatching Dante flows.',
+    },
+    {
+      name: 'RF Wireless System (Shure / Sennheiser)',
+      dept: 'Audio',
+      pos: 'Source',
+      crit: 'Show-critical',
+      risk: 'Critical',
+      use: ['Audio Network', 'IMAG', 'Show Control'],
+      signalsIn: ['RF', 'Mic capsules'],
+      signalsOut: ['Balanced audio', 'Network monitoring'],
+      role: 'Wireless microphones and IEM systems for presenters, hosts, and talent.',
+      failure: 'Frequency conflict with house systems; battery failure; capsule dropout.',
+      dependsOn: ['Coordinated frequency plan', 'Fresh batteries', 'Antenna placement'],
+      backupPlan: 'Switch to wired handheld or standby RF channel with spare pack.',
+      recovery: 'Confirm battery and RF environment first, then swap to backup frequency or transmitter pack.',
+    },
+    {
+      name: 'Stage Box / Snake',
+      dept: 'Audio',
+      pos: 'Distribution',
+      crit: 'High',
+      risk: 'High',
+      use: ['Audio Network', 'Playback'],
+      signalsIn: ['Analog', 'MADI', 'Fiber'],
+      signalsOut: ['Analog', 'MADI', 'Fiber'],
+      role: 'Breakout point at stage carrying inputs back to console over analog or digital transport.',
+      failure: 'Loose XLR connections; MADI frame errors; fiber SFP type mismatch.',
+      dependsOn: ['Reliable cabling', 'Correct transport type'],
+      backupPlan: 'Move critical channels to direct stage inputs or spare rack I/O.',
+      recovery: 'Inspect physical connections before reopening patch logic; transport errors are often cable or SFP related.',
+    },
+    {
+      name: 'Managed Network Switch (Cisco / Netgear)',
+      dept: 'Network',
+      pos: 'Distribution',
+      crit: 'Show-critical',
+      risk: 'Critical',
+      use: ['Audio Network', 'Show Control', 'IMAG', 'LED'],
+      signalsIn: ['Ethernet'],
+      signalsOut: ['VLAN segmented Ethernet'],
+      role: 'Layer 2/3 backbone separating MA-Net, Dante, NDI, control, and show systems.',
+      failure: 'QoS not configured; VLAN trunk misconfigured; spanning tree convergence delay.',
+      dependsOn: ['Correct VLAN plan', 'QoS policy', 'Port profile consistency'],
+      backupPlan: 'Reduce to core flat fallback network for one show-critical workflow while isolating nonessential traffic.',
+      recovery: 'Validate trunk, QoS, and port assignment before repowering endpoints or replacing downstream devices.',
+    },
+    {
+      name: 'Fiber Media Converter',
+      dept: 'Network',
+      pos: 'Distribution',
+      crit: 'High',
+      risk: 'High',
+      use: ['Audio Network', 'LED', 'IMAG'],
+      signalsIn: ['Copper Ethernet', 'Fiber'],
+      signalsOut: ['Fiber', 'Copper Ethernet'],
+      role: 'Bridges long venue runs between copper and singlemode or multimode fiber.',
+      failure: 'SFP wavelength mismatch; bend radius exceeded; dirty connector.',
+      dependsOn: ['Correct SFP pair', 'Clean fiber', 'Known distance budget'],
+      backupPlan: 'Swap to spare matched converters or reroute to shorter copper run where practical.',
+      recovery: 'Inspect optics and connector cleanliness before replacing network hardware further upstream.',
+    },
+    {
+      name: 'NDI Encoder / Decoder',
+      dept: 'Network',
+      pos: 'Distribution',
+      crit: 'Medium',
+      risk: 'High',
+      use: ['IMAG', 'LED', 'Playback'],
+      signalsIn: ['HDMI', 'SDI', 'Ethernet'],
+      signalsOut: ['NDI', 'HDMI', 'SDI'],
+      role: 'Video-over-IP bridge for PTZ, streaming, confidence, and remote display workflows.',
+      failure: 'Network bandwidth saturation; multicast not enabled; mDNS blocked.',
+      dependsOn: ['Sufficient bandwidth', 'Multicast support', 'Network discovery'],
+      backupPlan: 'Fallback to baseband SDI path for essential destinations.',
+      recovery: 'Check bandwidth and discovery path first; NDI failures are usually network policy issues before endpoint faults.',
+    },
+    {
+      name: 'Show Control PC (QLab, ProPresenter)',
+      dept: 'Video',
+      pos: 'Source',
+      crit: 'Show-critical',
+      risk: 'Critical',
+      use: ['Playback', 'Show Control', 'IMAG'],
+      signalsIn: ['Operator cues', 'Network triggers', 'Timecode'],
+      signalsOut: ['DisplayPort', 'HDMI', 'MTC'],
+      role: 'Playback and cue engine for slides, lower thirds, media, and timecode-driven events.',
+      failure: 'GPU driver crash; DisplayPort handshake failure; timecode MTC offset wrong.',
+      dependsOn: ['Stable GPU output', 'Known playlist version', 'Cue sync'],
+      backupPlan: 'Use mirrored standby machine with cloned showfile and pre-warmed outputs.',
+      recovery: 'Switch to mirrored playback first, then debug handshake and timing offsets offline.',
+    },
+    {
+      name: 'PTZ Camera (Sony / Marshall)',
+      dept: 'Video',
+      pos: 'Source',
+      crit: 'High',
+      risk: 'Moderate',
+      use: ['IMAG', 'Playback'],
+      signalsIn: ['PoE', 'SDI', 'VISCA'],
+      signalsOut: ['SDI', 'NDI', 'Control data'],
+      role: 'Remote-controlled camera for IMAG, recording, and room coverage.',
+      failure: 'Control protocol mismatch; camera preset drift over session.',
+      dependsOn: ['Correct control mode', 'Known presets', 'Stable power/network'],
+      backupPlan: 'Manual shot from staffed camera or static safe preset if control is lost.',
+      recovery: 'Verify control protocol before chasing video path; preset drift usually indicates addressing or mode mismatch.',
+    },
+    {
+      name: 'Program / Confidence Monitor',
+      dept: 'Video',
+      pos: 'Output',
+      crit: 'Medium',
+      risk: 'Moderate',
+      use: ['IMAG', 'Playback', 'Show Control'],
+      signalsIn: ['HDMI', 'SDI', 'HDBaseT'],
+      signalsOut: ['Display image'],
+      role: 'Shows program, notes, timer, or confidence content for presenters and crew.',
+      failure: 'EDID negotiation on long run; resolution scaling artifact from mismatched source.',
+      dependsOn: ['Stable display handshake', 'Correct feed assignment'],
+      backupPlan: 'Fallback to spare display or direct source feed with simplified layout.',
+      recovery: 'Check feed path and resolution chain before replacing the panel itself.',
+    },
+    {
+      name: 'Timecode Generator (LTC / MTC)',
+      dept: 'Network',
+      pos: 'Source',
+      crit: 'High',
+      risk: 'High',
+      use: ['Show Control', 'Lighting Control', 'Audio Network'],
+      signalsIn: ['Clock reference'],
+      signalsOut: ['LTC', 'MTC', 'Network sync'],
+      role: 'Distributes sync reference to playback, lighting, and audio for cue-locked show flow.',
+      failure: 'Offset not zeroed at show start; LTC dropout from cable noise; frame rate mismatch.',
+      dependsOn: ['Correct frame rate', 'Clean cabling', 'Shared cue reference'],
+      backupPlan: 'Trigger cues manually and revert to local timeline control until sync path is restored.',
+      recovery: 'Check frame rate and offset before rearming systems; a bad timecode reference cascades fast.',
+    },
+  ];
+
+  const orderMaps = {
+    criticality: { 'Show-critical': 0, High: 1, Medium: 2 },
+    risk: { Critical: 0, High: 1, Moderate: 2 },
+    position: { Source: 0, Processing: 1, Distribution: 2, Output: 3 },
+    department: { Video: 0, Lighting: 1, Audio: 2, Network: 3 },
+  };
+
+  const tableBody = document.getElementById('tableBody');
+  const mobileCards = document.getElementById('mobileCards');
+  const detailPanel = document.getElementById('detailPanel');
+  const search = document.getElementById('search');
+  const deptFilter = document.getElementById('deptFilter');
+  const posFilter = document.getElementById('posFilter');
+  const critFilter = document.getElementById('critFilter');
+  const stackFilter = document.getElementById('stackFilter');
+  const sortFilter = document.getElementById('sortFilter');
+  const countDisplay = document.getElementById('countDisplay');
+  const criticalDisplay = document.getElementById('criticalDisplay');
+  const deptDisplay = document.getElementById('deptDisplay');
+  const stackDisplay = document.getElementById('stackDisplay');
+  const coverageDisplay = document.getElementById('coverageDisplay');
+
+  let selectedName = rows[0].name;
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (ch) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch]));
+  }
+
+  function deptClassName(dept) {
+    return {
+      Video: 'dept-video',
+      Lighting: 'dept-lighting',
+      Audio: 'dept-audio',
+      Network: 'dept-network',
+    }[dept] || '';
+  }
+
+  function critBadgeClass(crit) {
+    return {
+      'Show-critical': 'crit-show-critical',
+      High: 'crit-high',
+      Medium: 'crit-medium',
+    }[crit] || '';
+  }
+
+  function riskBadgeClass(risk) {
+    return {
+      Critical: 'risk-critical',
+      High: 'risk-high',
+      Moderate: 'risk-moderate',
+    }[risk] || '';
+  }
+
+  function compareByMap(map, left, right) {
+    return (map[left] ?? 99) - (map[right] ?? 99);
+  }
+
+  function getFilteredRows() {
+    const q = search.value.trim().toLowerCase();
+    const dept = deptFilter.value;
+    const pos = posFilter.value;
+    const crit = critFilter.value;
+    const stack = stackFilter.value;
+    const sort = sortFilter.value;
+
+    const filtered = rows.filter((row) => {
+      const hay = [
+        row.name,
+        row.dept,
+        row.pos,
+        row.crit,
+        row.risk,
+        row.role,
+        row.failure,
+        row.recovery,
+        row.backupPlan,
+        ...row.use,
+        ...row.signalsIn,
+        ...row.signalsOut,
+        ...row.dependsOn,
+      ].join(' ').toLowerCase();
+
+      return (!q || hay.includes(q))
+        && (dept === 'all' || row.dept === dept)
+        && (pos === 'all' || row.pos === pos)
+        && (crit === 'all' || row.crit === crit)
+        && (stack === 'all' || row.use.includes(stack));
+    });
+
+    filtered.sort((left, right) => {
+      if (sort === 'gear') return left.name.localeCompare(right.name);
+      if (sort === 'department') {
+        return compareByMap(orderMaps.department, left.dept, right.dept) || left.name.localeCompare(right.name);
+      }
+      if (sort === 'position') {
+        return compareByMap(orderMaps.position, left.pos, right.pos) || left.name.localeCompare(right.name);
+      }
+      if (sort === 'risk') {
+        return compareByMap(orderMaps.risk, left.risk, right.risk) || compareByMap(orderMaps.criticality, left.crit, right.crit) || left.name.localeCompare(right.name);
+      }
+      return compareByMap(orderMaps.criticality, left.crit, right.crit) || compareByMap(orderMaps.risk, left.risk, right.risk) || left.name.localeCompare(right.name);
+    });
+
+    return filtered;
+  }
+
+  function renderStats(filtered) {
+    countDisplay.textContent = filtered.length;
+    criticalDisplay.textContent = filtered.filter((row) => row.crit === 'Show-critical').length;
+    deptDisplay.textContent = new Set(filtered.map((row) => row.dept)).size;
+    stackDisplay.textContent = new Set(filtered.flatMap((row) => row.use)).size;
+    coverageDisplay.textContent = filtered.length;
+  }
+
+  function renderDetail(row) {
+    if (!row) {
+      detailPanel.innerHTML = `<div class="detail-empty">No gear matches those filters. Clear one or more controls to restore the map.</div>`;
+      return;
+    }
+
+    detailPanel.innerHTML = `
+      <div class="detail-header">
+        <div class="detail-title">${escapeHtml(row.name)}</div>
+        <div class="detail-sub">${escapeHtml(row.dept)} · ${escapeHtml(row.pos)} · ${escapeHtml(row.use.join(', '))}</div>
+        <div class="gear-subline">
+          <span class="dept-tag ${deptClassName(row.dept)}">${escapeHtml(row.dept)}</span>
+          <span class="risk-badge ${riskBadgeClass(row.risk)}">${escapeHtml(row.risk)} risk</span>
+          <span class="crit-badge ${critBadgeClass(row.crit)}">${escapeHtml(row.crit)}</span>
+        </div>
+      </div>
+
+      <div class="detail-block">
+        <div class="detail-label">Role in show</div>
+        <p>${escapeHtml(row.role)}</p>
+      </div>
+
+      <div class="detail-block">
+        <div class="detail-label">Signal interfaces</div>
+        <div class="detail-kv">
+          <div class="detail-kv-row">
+            <div class="detail-k">Signals in</div>
+            <div class="detail-v chip-row">${row.signalsIn.map((signal) => `<span class="signal-chip signal-in">${escapeHtml(signal)}</span>`).join('')}</div>
+          </div>
+          <div class="detail-kv-row">
+            <div class="detail-k">Signals out</div>
+            <div class="detail-v chip-row">${row.signalsOut.map((signal) => `<span class="signal-chip signal-out">${escapeHtml(signal)}</span>`).join('')}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-block">
+        <div class="detail-label">Dependencies</div>
+        <div class="chip-row">${row.dependsOn.map((item) => `<span class="signal-chip">${escapeHtml(item)}</span>`).join('')}</div>
+      </div>
+
+      <div class="detail-block">
+        <div class="detail-label">Common failure</div>
+        <p>${escapeHtml(row.failure)}</p>
+      </div>
+
+      <div class="detail-block">
+        <div class="detail-label">Field recovery</div>
+        <div class="detail-recovery">${escapeHtml(row.recovery)}</div>
+      </div>
+
+      <div class="detail-block">
+        <div class="detail-label">Backup path</div>
+        <p>${escapeHtml(row.backupPlan)}</p>
+      </div>
+    `;
+  }
+
+  function selectRow(name) {
+    selectedName = name;
+    render();
+  }
+
+  function rowMarkup(row, selected) {
+    return `
+      <tr class="gear-row ${selected ? 'selected' : ''}">
+        <td>
+          <button type="button" class="row-focus" data-select="${escapeHtml(row.name)}">
+            <div class="gear-name">${escapeHtml(row.name)}</div>
+            <span class="dept-tag ${deptClassName(row.dept)}">${escapeHtml(row.dept)}</span>
+            <div class="gear-subline">
+              ${row.use.slice(0, 2).map((stack) => `<span class="mini-pill">${escapeHtml(stack)}</span>`).join('')}
+            </div>
+          </button>
+        </td>
+        <td><div class="stack-pills">${row.use.map((stack) => `<span class="stack-pill">${escapeHtml(stack)}</span>`).join('')}</div></td>
+        <td style="color:var(--text-soft)">${escapeHtml(row.pos)}</td>
+        <td><span class="risk-badge ${riskBadgeClass(row.risk)}">${escapeHtml(row.risk)}</span></td>
+        <td><span class="crit-badge ${critBadgeClass(row.crit)}">${escapeHtml(row.crit)}</span></td>
+        <td class="action-col"><button type="button" class="action-link" data-select="${escapeHtml(row.name)}">Inspect</button></td>
+      </tr>
+    `;
+  }
+
+  function mobileCardMarkup(row, selected) {
+    return `
+      <article class="mobile-card ${selected ? 'selected' : ''}">
+        <button type="button" data-select="${escapeHtml(row.name)}">
+          <div class="mobile-top">
+            <div>
+              <div class="gear-name">${escapeHtml(row.name)}</div>
+              <span class="dept-tag ${deptClassName(row.dept)}">${escapeHtml(row.dept)}</span>
+            </div>
+            <span class="crit-badge ${critBadgeClass(row.crit)}">${escapeHtml(row.crit)}</span>
+          </div>
+          <div class="mobile-meta">
+            <div><strong>Use:</strong> ${escapeHtml(row.use.join(', '))}</div>
+            <div><strong>Signal path:</strong> ${escapeHtml(row.pos)}</div>
+            <div><strong>Failure risk:</strong> <span class="risk-badge ${riskBadgeClass(row.risk)}">${escapeHtml(row.risk)}</span></div>
+            <div>${escapeHtml(row.role)}</div>
+          </div>
+        </button>
+      </article>
+    `;
+  }
+
+  function render() {
+    const filtered = getFilteredRows();
+    const selectedRow = filtered.find((row) => row.name === selectedName) || filtered[0] || null;
+
+    renderStats(filtered);
+    renderDetail(selectedRow);
+
+    tableBody.innerHTML = filtered.map((row) => rowMarkup(row, selectedRow && selectedRow.name === row.name)).join('')
+      || `<tr><td colspan="6" class="empty-state">No gear matches those filters. Try broader search terms or clear one of the stack filters.</td></tr>`;
+
+    mobileCards.innerHTML = filtered.map((row) => mobileCardMarkup(row, selectedRow && selectedRow.name === row.name)).join('')
+      || `<div class="empty-state">No gear matches those filters. Try broader search terms or clear one of the stack filters.</div>`;
+
+    document.querySelectorAll('thead [data-sort]').forEach((button) => {
+      button.classList.toggle('active', button.dataset.sort === sortFilter.value);
+    });
+  }
+
+  function handleSortRequest(sortKey) {
+    sortFilter.value = sortKey;
+    render();
+  }
+
+  search.addEventListener('input', render);
+  deptFilter.addEventListener('change', render);
+  posFilter.addEventListener('change', render);
+  critFilter.addEventListener('change', render);
+  stackFilter.addEventListener('change', render);
+  sortFilter.addEventListener('change', render);
+
+  document.querySelector('thead').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-sort]');
+    if (!button) return;
+    handleSortRequest(button.dataset.sort);
+  });
+
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-select]');
+    if (!button) return;
+    selectRow(button.dataset.select);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === '/' && document.activeElement !== search) {
+      event.preventDefault();
+      search.focus();
+      search.select();
+      return;
+    }
+
+    if (event.key === 'Escape') {
+      if (search.value) {
+        search.value = '';
+        render();
+      }
+      return;
+    }
+
+    const filtered = getFilteredRows();
+    if (!filtered.length) return;
+    const currentIndex = Math.max(0, filtered.findIndex((row) => row.name === selectedName));
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      const next = filtered[Math.min(filtered.length - 1, currentIndex + 1)];
+      if (next) selectRow(next.name);
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      const next = filtered[Math.max(0, currentIndex - 1)];
+      if (next) selectRow(next.name);
+    }
+
+    if (event.key === 'Enter' && document.activeElement !== search) {
+      event.preventDefault();
+      const next = filtered[currentIndex];
+      if (next) selectRow(next.name);
+    }
+  });
+
+  render();
+
+  (() => {
+    const select = document.getElementById('themeSelect');
+    const storageKey = `layout-theme:${location.pathname.split('/').pop() || 'live_event_gear_map.html'}`;
+
+    function applyTheme(value) {
+      if (value && value !== 'default') {
+        document.body.dataset.theme = value;
+      } else {
+        document.body.removeAttribute('data-theme');
+      }
+      select.value = value || 'default';
+    }
+
+    applyTheme(localStorage.getItem(storageKey) || 'default');
+
+    select.addEventListener('change', (event) => {
+      const value = event.target.value;
+      localStorage.setItem(storageKey, value);
+      applyTheme(value);
+    });
+  })();
+</script>
+</body>
+</html>
