@@ -26,3 +26,4 @@ Collection of reusable HTML layout templates and reference pages. Includes a hom
 ## Session Log
 
 [2026-03-18] [WebTemplates] [docs] Add AGENTS baseline
+[2026-06-10] [WebTemplates] [feat] Add layout_annotated_review.html — two-view review / issue-register pattern (filterable priority cards + margin-annotated source); catalog now lists 9 built layouts

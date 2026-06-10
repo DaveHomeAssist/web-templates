@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Annotated Review — Template</title>
+<link rel="icon" type="image/svg+xml" href="assets/icons/favicon/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon/favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/favicon/apple-touch-icon.png">
+
+<!--
+  ============================================================================
+  ANNOTATED REVIEW — reusable layout template
+  ============================================================================
+  A two-view "review / issue-register" pattern. Use it any time you have a
+  source document or artifact and want to (a) summarise findings as a
+  priority-ranked, filterable list, and (b) show the original text with
+  margin annotations. Originally built for a contract review; works just as
+  well for code reviews, audits, RFP/policy reviews, due-diligence, etc.
+
+  WHAT'S IN THE BOX
+    • Summary Review view  — filterable issue cards (Critical/High/Med/Low),
+      a "what's already fine" list, a headline-metric block, a checklist,
+      and a copy-to-clipboard action/email block.
+    • Annotated Source view — the original document reproduced with inline
+      highlights and numbered margin comments that match the issue numbers.
+    • Three vanilla-JS behaviours: view toggle, priority filter, copy button.
+      No frameworks, no build step, no external fonts (system stack).
+
+  HOW TO ADAPT (find/replace map)
+    1. Header:  .eyebrow / h1 / .sub / .facts / .banner  → your subject,
+       parties, key numbers, and a one-line status callout.
+    2. Issues:  duplicate a `.issue` block per finding. Set data-pri to
+       crit | high | med | low (drives the colour + the filter). Optional
+       rows: "What it says" (.quote), discussion (.disc), "Ask for" (.ask),
+       and a `.legalnote` for expert/escalation notes.
+    3. Source view: under #view-doc, paste the original text in <p>/<h4>.
+       Wrap a passage in <span class="mark" data-pri="..."> and drop an
+       <aside class="cmt" data-pri="..."> in the same .clause to annotate it.
+       The little superscript number (.mark-n / .cmt-n) ties the two together.
+    4. Re-label "Is the price fair?" / .price for any headline metric, and
+       the email block for any copy-ready output (message, summary, ticket).
+    5. Delete any section you don't need — every block is independent.
+
+  ACCENT KEYS:  crit (red) · high (orange) · med (gold) · low (grey)
+                + good (green) and legal (blue) for the supporting blocks.
+  Swap the palette in :root. Single file — copy it and go.
+  ============================================================================
+-->
+
+<style>
+  :root{ color-scheme:light;
+    --bg:#f6f5f2; --card:#ffffff; --ink:#1c1b19; --muted:#6b6862; --line:#e6e3dd;
+    --crit:#c0392b; --crit-bg:#fbeae7;
+    --high:#d35400; --high-bg:#fcecdf;
+    --med:#b8860b; --med-bg:#faf3da;
+    --low:#6b7280; --low-bg:#eef0f2;
+    --good:#2e7d52; --good-bg:#e6f3ec;
+    --legal:#3b5b8c; --legal-bg:#eaf0fb;
+    --shadow:0 1px 2px rgba(0,0,0,.05),0 6px 20px rgba(0,0,0,.05);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 80px}
+  h1,h2,h3{font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.2;margin:0}
+  a{color:var(--legal)}
+
+  /* Header */
+  .head{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px;box-shadow:var(--shadow);margin-bottom:20px}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  h1{font-size:28px;margin:6px 0 4px}
+  .sub{color:var(--muted);font-size:15px}
+  .banner{margin-top:18px;background:var(--crit-bg);border:1px solid #f0c9c2;color:var(--crit);border-radius:10px;padding:12px 14px;font-weight:600;font-size:14px}
+  .banner span{font-weight:400;color:#7a3b32}
+
+  /* Fact grid */
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:18px}
+  .fact{background:var(--card);padding:14px 16px}
+  .fact .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .fact .v{font-size:18px;font-weight:600;font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin-top:2px}
+
+  /* How to use */
+  .howto{background:var(--legal-bg);border:1px solid #cdd9f0;border-radius:14px;padding:20px 22px;margin-bottom:22px}
+  .howto h2{font-size:17px;color:var(--legal);margin-bottom:8px}
+  .howto p{margin:6px 0;font-size:14.5px}
+  .howto ul{margin:8px 0 0;padding-left:18px;font-size:14.5px}
+  .howto li{margin:4px 0}
+
+  /* Filter bar */
+  .filterbar{position:sticky;top:0;z-index:20;background:rgba(246,245,242,.92);backdrop-filter:blur(8px);padding:12px 0;margin-bottom:14px;border-bottom:1px solid var(--line)}
+  .filterbar-inner{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .flabel{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-right:2px}
+  .chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--ink);transition:.15s}
+  .chip:hover{border-color:#c9c5bd}
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .chip .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+
+  /* Section heads */
+  .sec-title{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:30px 4px 12px}
+
+  /* Issue cards */
+  .issue{background:var(--card);border:1px solid var(--line);border-left-width:5px;border-radius:14px;padding:20px 22px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .issue[data-pri="crit"]{border-left-color:var(--crit)}
+  .issue[data-pri="high"]{border-left-color:var(--high)}
+  .issue[data-pri="med"]{border-left-color:var(--med)}
+  .issue[data-pri="low"]{border-left-color:var(--low)}
+  .issue-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:4px}
+  .num{font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-weight:700;color:var(--muted);font-size:14px}
+  .issue h3{font-size:19px;flex:1;min-width:200px}
+  .tags{display:flex;gap:6px;flex-wrap:wrap}
+  .badge{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:4px 9px;border-radius:6px}
+  .b-crit{background:var(--crit-bg);color:var(--crit)}
+  .b-high{background:var(--high-bg);color:var(--high)}
+  .b-med{background:var(--med-bg);color:var(--med)}
+  .b-low{background:var(--low-bg);color:var(--low)}
+  .b-src{background:#f0eee9;color:var(--muted)}
+  .row{margin-top:12px}
+  .row .lab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:3px}
+  .quote{border-left:3px solid var(--line);padding:6px 0 6px 14px;color:#46443f;font-style:italic;font-size:14.5px;background:linear-gradient(90deg,#faf9f7,transparent)}
+  .ask{background:#f4f8f5;border:1px solid #d6e7dd;border-radius:9px;padding:11px 14px;font-size:14.5px}
+  .ask strong{color:var(--good)}
+  .legalnote{background:var(--legal-bg);border:1px solid #cdd9f0;border-radius:9px;padding:11px 14px;font-size:14px;margin-top:12px}
+  .legalnote .lab{color:var(--legal)}
+  .disc{font-size:15px;margin-top:6px}
+
+  /* Good list */
+  .good{background:var(--good-bg);border:1px solid #c7e3d3;border-radius:14px;padding:20px 22px;margin-bottom:14px}
+  .good h3{font-size:18px;color:var(--good);margin-bottom:8px}
+  .good ul{margin:0;padding-left:18px;columns:2;column-gap:28px;font-size:14.5px}
+  .good li{margin:5px 0;break-inside:avoid}
+
+  /* Headline metric */
+  .price{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .price h3{font-size:18px;margin-bottom:6px}
+  .pricebig{font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:30px;font-weight:700}
+  .pricebig small{font-size:14px;color:var(--muted);font-weight:500}
+
+  /* Checklist */
+  .check{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:14px}
+  .check h3{font-size:18px;margin-bottom:12px}
+  .clist{list-style:none;margin:0;padding:0}
+  .clist li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14.5px}
+  .clist li:last-child{border-bottom:0}
+  .box{width:18px;height:18px;border:2px solid var(--high);border-radius:5px;flex:none;margin-top:2px}
+
+  /* Copy-ready output (email / message / ticket) */
+  .email{background:#1c1b19;color:#f1efe9;border-radius:14px;padding:22px;margin-bottom:14px}
+  .email h3{color:#fff;font-size:18px;margin-bottom:4px}
+  .email .meta{font-size:13px;color:#a9a59c;margin-bottom:14px}
+  .email pre{white-space:pre-wrap;font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.7;margin:0;color:#e7e4dd}
+  .copybtn{margin-top:14px;background:#f1efe9;color:#1c1b19;border:0;border-radius:8px;padding:9px 16px;font-weight:600;font-family:inherit;font-size:14px;cursor:pointer}
+  .copybtn:active{transform:scale(.98)}
+
+  .disclaim{font-size:12.5px;color:var(--muted);margin-top:24px;text-align:center;line-height:1.5}
+  .hidden{display:none !important}
+
+  /* View toggle */
+  .viewtoggle{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .viewtoggle button{flex:1;border:0;background:transparent;font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-weight:600;font-size:14.5px;padding:11px;border-radius:8px;cursor:pointer;color:var(--muted);transition:.15s}
+  .viewtoggle button.active{background:var(--ink);color:#fff}
+
+  /* Annotated document */
+  .doc{max-width:1040px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:36px 40px;box-shadow:var(--shadow)}
+  .doc-title{font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:22px;font-weight:700;text-align:center;margin-bottom:4px}
+  .doc-meta{text-align:center;color:var(--muted);font-size:13px;margin-bottom:8px}
+  .doc-hint{text-align:center;color:var(--muted);font-size:12.5px;font-style:italic;margin-bottom:22px}
+  .pagemark{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;border-top:1px dashed var(--line);padding-top:14px;margin:30px 0 12px;clear:both}
+  .doc h4{font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:15px;margin:18px 0 4px;color:var(--ink)}
+  .doc p{font-size:14px;color:#33312d;margin:9px 0}
+  .clause{overflow:visible}
+
+  /* Margin comment */
+  .cmt{float:right;clear:right;width:300px;margin:4px 0 16px 30px;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.5;background:var(--low-bg);border:1px solid var(--line);border-left:4px solid var(--low)}
+  .cmt[data-pri="crit"]{background:var(--crit-bg);border-left-color:var(--crit)}
+  .cmt[data-pri="high"]{background:var(--high-bg);border-left-color:var(--high)}
+  .cmt[data-pri="med"]{background:var(--med-bg);border-left-color:var(--med)}
+  .cmt[data-pri="low"]{background:var(--low-bg);border-left-color:var(--low)}
+  .cmt-h{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .cmt-n{font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-weight:700;font-size:12px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+  .cmt[data-pri="crit"] .cmt-n{background:var(--crit)}
+  .cmt[data-pri="high"] .cmt-n{background:var(--high)}
+  .cmt[data-pri="med"] .cmt-n{background:var(--med)}
+  .cmt[data-pri="low"] .cmt-n{background:var(--low)}
+  .cmt-t{font-weight:700;font-size:12.5px;font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.25}
+  .cmt .ask2{margin-top:7px;padding-top:7px;border-top:1px solid rgba(0,0,0,.08)}
+  .cmt .ask2 b{font-weight:700}
+  .cmt.legalc{border-left-color:var(--legal);background:var(--legal-bg)}
+  .cmt.legalc .cmt-n{background:var(--legal)}
+  .cmt .vtag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--legal);background:#fff;border:1px solid #cdd9f0;border-radius:4px;padding:1px 5px;margin-left:auto}
+
+  /* Inline highlight */
+  .mark{border-radius:3px;padding:0 2px;border-bottom:2px solid;cursor:default}
+  .mark[data-pri="crit"]{background:var(--crit-bg);border-color:var(--crit)}
+  .mark[data-pri="high"]{background:var(--high-bg);border-color:var(--high)}
+  .mark[data-pri="med"]{background:var(--med-bg);border-color:var(--med)}
+  .mark[data-pri="low"]{background:var(--low-bg);border-color:var(--low)}
+  .mark-n{font-size:10px;font-weight:700;vertical-align:super;margin-left:1px;color:var(--muted)}
+
+  @media (max-width:860px){
+    .cmt{float:none;width:auto;margin:10px 0 18px}
+    .doc{padding:24px 18px}
+  }
+  @media print{
+    .viewtoggle{display:none}
+    #view-doc.hidden,#view-summary.hidden{display:block !important}
+    .cmt{float:none;width:auto}
+  }
+
+  @media (max-width:560px){
+    .good ul{columns:1}
+    h1{font-size:24px}
+    .wrap{padding:20px 14px 60px}
+  }
+  @media print{
+    body{background:#fff}
+    .filterbar,.copybtn{display:none}
+    .issue,.head,.good,.price,.check,.email,.howto{box-shadow:none;break-inside:avoid}
+    .email{background:#fff;color:#000;border:1px solid #ccc}
+    .email h3,.email pre{color:#000}
+    .email .meta{color:#444}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER ─ subject, parties, key facts, status callout -->
+  <div class="head">
+    <div class="eyebrow">Review Type · Optional Tagline</div>
+    <h1>Review Title Goes Here</h1>
+    <div class="sub">Subject of review &nbsp;·&nbsp; Party A &nbsp;·&nbsp; Party B &nbsp;·&nbsp; Context / date &nbsp;·&nbsp; Reviewed [date]</div>
+
+    <!-- Up to ~5 at-a-glance facts. Add/remove .fact blocks freely. -->
+    <div class="facts">
+      <div class="fact"><div class="k">Headline metric</div><div class="v">$0,000</div></div>
+      <div class="fact"><div class="k">Key figure</div><div class="v">00%</div></div>
+      <div class="fact"><div class="k">Another</div><div class="v">$0,000</div></div>
+      <div class="fact"><div class="k">Scope</div><div class="v">000 units</div></div>
+      <div class="fact"><div class="k">Unit rate</div><div class="v">$0.00 / unit</div></div>
+    </div>
+
+    <!-- Status / headline takeaway. Swap colours via the --crit token if needed. -->
+    <div class="banner">One-line status or headline finding. <span>A sentence of supporting context — why this is the moment to act, or the single most important thing to know.</span></div>
+  </div>
+
+  <!-- HOW TO USE ─ orient the reader. Delete if not needed. -->
+  <div class="howto">
+    <h2>How to use this page</h2>
+    <p>A plain-language explanation of what this review is and how to read it. Tell each audience where to look.</p>
+    <ul>
+      <li><strong>Primary reader:</strong> the red and orange items at the top are the ones that need action first; the green section near the bottom is what already looks fine.</li>
+      <li><strong>Specialist / second reviewer:</strong> blue <em>Legal note</em> / expert boxes flag the items where their read matters most. Everything is sourced to the original text.</li>
+      <li>Use the filter buttons to show only one priority, or print the page (it is formatted to print cleanly).</li>
+    </ul>
+    <p style="margin-bottom:0"><strong>One caveat up front:</strong> state the scope and any disclaimer here (e.g. "practical review, not legal advice").</p>
+  </div>
+
+  <!-- VIEW TOGGLE ─ Summary ⇄ Annotated source -->
+  <div class="viewtoggle">
+    <button id="tab-summary" class="active">📋&nbsp; Summary Review</button>
+    <button id="tab-doc">📄&nbsp; Annotated Source</button>
+  </div>
+
+  <div id="view-summary">
+
+  <!-- FILTER ─ priorities map to each .issue's data-pri -->
+  <div class="filterbar">
+    <div class="filterbar-inner">
+      <span class="flabel">Show</span>
+      <button class="chip active" data-filter="all">All issues</button>
+      <button class="chip" data-filter="crit"><span class="dot" style="background:var(--crit)"></span>Critical</button>
+      <button class="chip" data-filter="high"><span class="dot" style="background:var(--high)"></span>High</button>
+      <button class="chip" data-filter="med"><span class="dot" style="background:var(--med)"></span>Medium</button>
+      <button class="chip" data-filter="low"><span class="dot" style="background:var(--low)"></span>Low</button>
+    </div>
+  </div>
+
+  <div class="sec-title">The Issues — highest priority first</div>
+  <!--
+    ISSUE CARD ─ duplicate one block per finding.
+      data-pri = crit | high | med | low   (drives the colour + the filter)
+      Optional rows inside a card:
+        .row > .quote   "What it says" — verbatim from the source
+        .disc           free discussion / why it matters
+        .row > .ask     "Ask for" / recommendation (green)
+        .legalnote      escalation note for a specialist (blue)
+        .badge.b-src    optional provenance tag(s)
+  -->
+  <div id="issues">
+
+  <!-- CRITICAL example (minimal card: just a discussion + action) -->
+  <div class="issue" data-pri="crit">
+    <div class="issue-top">
+      <span class="num">01</span>
+      <h3>Critical finding — short, specific title</h3>
+      <div class="tags"><span class="badge b-crit">Critical</span></div>
+    </div>
+    <div class="disc">One or two sentences on what this is and why it tops the list. Lead with the consequence, not the mechanism.</div>
+    <div class="row"><div class="lab">What to do</div><div class="ask"><strong>The single action to take.</strong> Keep it concrete and immediate.</div></div>
+  </div>
+
+  <!-- HIGH example (full card: quote + discussion + ask) -->
+  <div class="issue" data-pri="high">
+    <div class="issue-top">
+      <span class="num">02</span>
+      <h3>High-priority finding title</h3>
+      <div class="tags"><span class="badge b-high">High</span><span class="badge b-src">Source tag</span></div>
+    </div>
+    <div class="row"><div class="lab">What it says</div><div class="quote">"Paste the exact passage from the source document here…"</div></div>
+    <div class="disc">Explain the gap or risk in plain language. What could go wrong, and how likely / costly is it?</div>
+    <div class="row"><div class="lab">Ask for</div><div class="ask"><strong>The specific change to request</strong>, phrased so it can be dropped straight into a reply.</div></div>
+  </div>
+
+  <!-- HIGH example with a specialist/legal note -->
+  <div class="issue" data-pri="high">
+    <div class="issue-top">
+      <span class="num">03</span>
+      <h3>Finding that needs an expert's read</h3>
+      <div class="tags"><span class="badge b-high">High</span></div>
+    </div>
+    <div class="disc">Describe the issue for the general reader.</div>
+    <div class="row"><div class="lab">Ask for</div><div class="ask"><strong>The practical ask.</strong></div></div>
+    <div class="legalnote"><div class="lab" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin-bottom:3px">Legal note / expert note</div>A more technical framing for the specialist — references, regs, edge cases, or the call you want them to make.</div>
+  </div>
+
+  <!-- MEDIUM example -->
+  <div class="issue" data-pri="med">
+    <div class="issue-top">
+      <span class="num">04</span>
+      <h3>Medium-priority finding title</h3>
+      <div class="tags"><span class="badge b-med">Medium</span></div>
+    </div>
+    <div class="disc">Worth fixing or clarifying, but not a blocker. One short paragraph.</div>
+    <div class="row"><div class="lab">Ask for</div><div class="ask"><strong>The clarification or tweak to request.</strong></div></div>
+  </div>
+
+  <!-- LOW example -->
+  <div class="issue" data-pri="low">
+    <div class="issue-top">
+      <span class="num">05</span>
+      <h3>Low-priority / cleanup item</h3>
+      <div class="tags"><span class="badge b-low">Low</span></div>
+    </div>
+    <div class="disc">Minor — a typo, a wording fix, a nice-to-have. Bundle these in with the bigger asks.</div>
+    <div class="row"><div class="lab">Ask for</div><div class="ask"><strong>The small correction.</strong></div></div>
+  </div>
+
+  </div><!-- /issues -->
+
+  <!-- GOOD ─ what already looks fine. Builds trust; delete if N/A. -->
+  <div class="sec-title">What's already fine</div>
+  <div class="good">
+    <h3>Fair / standard — no change needed</h3>
+    <ul>
+      <li>Point that's handled well</li>
+      <li>Another reasonable term</li>
+      <li>Something standard and acceptable</li>
+      <li>One more</li>
+      <li>And another</li>
+      <li>Keep the list balanced</li>
+    </ul>
+  </div>
+
+  <!-- HEADLINE METRIC ─ re-label for any "is this fair / on track?" check -->
+  <div class="sec-title">Headline metric — is it fair?</div>
+  <div class="price">
+    <h3>Sanity check</h3>
+    <div class="pricebig">$0.00<small> / per unit</small></div>
+    <div class="disc">Show the math and the benchmark. State plainly whether the number is reasonable, and steer the reader's attention to terms vs. cost (or whatever the real concern is).</div>
+  </div>
+
+  <!-- CHECKLIST ─ things to collect / verify before proceeding -->
+  <div class="sec-title">Before proceeding — verify</div>
+  <div class="check">
+    <h3>Documents / facts to collect first</h3>
+    <ul class="clist">
+      <li><span class="box"></span><div>First thing to obtain or confirm</div></li>
+      <li><span class="box"></span><div>Second item</div></li>
+      <li><span class="box"></span><div>Third item</div></li>
+      <li><span class="box"></span><div>Fourth item</div></li>
+      <li><span class="box"></span><div>Fifth item</div></li>
+    </ul>
+  </div>
+
+  <!-- COPY-READY OUTPUT ─ email, message, ticket, summary. Button copies #emailtext. -->
+  <div class="sec-title">Ready-to-send</div>
+  <div class="email">
+    <h3>Copy-ready message</h3>
+    <div class="meta">Who it's from/to and the tone. Pre-written so the reader can send it with one edit.</div>
+    <pre id="emailtext">Subject: [Your subject line]
+
+Hi [Name],
+
+Opening line that sets a constructive tone.
+
+1. First ask — the most important change, phrased plainly.
+
+2. Second ask.
+
+3. Third ask.
+
+Closing line. Offer a call if easier.
+
+Thanks,
+[Your name]</pre>
+    <button class="copybtn" id="copybtn">Copy text</button>
+  </div>
+
+  </div><!-- /view-summary -->
+
+  <!-- ANNOTATED SOURCE VIEW ─ the original document with margin comments -->
+  <div id="view-doc" class="hidden">
+   <div class="doc">
+    <div class="doc-title">Source Document — Full Text</div>
+    <div class="doc-meta">Where this was transcribed from, and a note that it's reproduced in full.</div>
+    <div class="doc-hint">Highlighted passages have a numbered comment in the margin (they stack below the text on narrow screens). Numbers match the Summary Review.</div>
+
+    <div class="pagemark">Page 1</div>
+
+    <h4>Section heading</h4>
+    <p>Plain reproduced text of the source. Keep paragraphs short for readability.</p>
+
+    <!--
+      ANNOTATED CLAUSE ─ pair a margin comment with an inline highlight.
+        <aside class="cmt" data-pri="...">   the margin note (float right)
+        <span class="mark" data-pri="...">   the highlighted passage
+        <span class="cmt-n">N</span> / <span class="mark-n">N</span>  the matching number
+        Add class "legalc" + a <span class="vtag"> to flag a specialist note.
+    -->
+    <div class="clause">
+      <aside class="cmt" data-pri="high">
+        <div class="cmt-h"><span class="cmt-n">2</span><span class="cmt-t">Short comment title</span></div>
+        The margin note: what's wrong or worth flagging in this passage.
+        <div class="ask2"><b>Ask:</b> the one-line fix.</div>
+      </aside>
+      <p>Reproduced clause text with a <span class="mark" data-pri="high">highlighted passage that the comment refers to<span class="mark-n">2</span></span>, then the rest of the clause continues normally.</p>
+    </div>
+
+    <div class="clause">
+      <aside class="cmt legalc" data-pri="high">
+        <div class="cmt-h"><span class="cmt-n">3</span><span class="cmt-t">Specialist flag</span><span class="vtag">For X</span></div>
+        A note routed to a specific reviewer. The blue "legalc" styling sets it apart.
+        <div class="ask2"><b>Ask:</b> practical ask. <b>X:</b> the technical question for them.</div>
+      </aside>
+      <p>Another clause, with a <span class="mark" data-pri="high">second highlighted passage<span class="mark-n">3</span></span>.</p>
+    </div>
+
+    <div class="clause">
+      <aside class="cmt" data-pri="med">
+        <div class="cmt-h"><span class="cmt-n">4</span><span class="cmt-t">Medium note</span></div>
+        A lower-priority margin comment.
+        <div class="ask2"><b>Ask:</b> the tweak.</div>
+      </aside>
+      <p>Clause text with a <span class="mark" data-pri="med">medium-priority highlight<span class="mark-n">4</span></span>.</p>
+    </div>
+
+    <div class="pagemark">Page 2</div>
+
+    <h4>Signatures / closing section</h4>
+    <div class="clause">
+      <aside class="cmt" data-pri="crit">
+        <div class="cmt-h"><span class="cmt-n">1</span><span class="cmt-t">Top-priority flag</span></div>
+        Use a crit-coloured comment for the single most important point — often tied to a signature, deadline, or decision gate.
+        <div class="ask2"><b>Do:</b> the action.</div>
+      </aside>
+      <p>Closing / signature text, with the <span class="mark" data-pri="crit">most important passage highlighted in red<span class="mark-n">1</span></span>.</p>
+    </div>
+
+   </div>
+  </div><!-- /view-doc -->
+
+  <div class="disclaim">
+    Footer / disclaimer line. State what this document is and isn't (e.g. "a practical review, not legal advice"), who it's for, and the date.<br>Prepared [date]
+  </div>
+
+</div>
+
+<script>
+  // Priority filter
+  var chips = document.querySelectorAll('.chip');
+  var issues = document.querySelectorAll('#issues .issue');
+  chips.forEach(function(c){
+    c.addEventListener('click', function(){
+      chips.forEach(function(x){x.classList.remove('active')});
+      c.classList.add('active');
+      var f = c.getAttribute('data-filter');
+      issues.forEach(function(it){
+        if(f==='all' || it.getAttribute('data-pri')===f){ it.classList.remove('hidden'); }
+        else { it.classList.add('hidden'); }
+      });
+    });
+  });
+  // View toggle
+  var tabS = document.getElementById('tab-summary'), tabD = document.getElementById('tab-doc');
+  var viewS = document.getElementById('view-summary'), viewD = document.getElementById('view-doc');
+  function show(which){
+    var doc = which==='doc';
+    viewD.classList.toggle('hidden',!doc); viewS.classList.toggle('hidden',doc);
+    tabD.classList.toggle('active',doc); tabS.classList.toggle('active',!doc);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  tabS.addEventListener('click',function(){show('summary')});
+  tabD.addEventListener('click',function(){show('doc')});
+
+  // Copy output
+  var btn = document.getElementById('copybtn');
+  btn.addEventListener('click', function(){
+    var t = document.getElementById('emailtext').innerText;
+    navigator.clipboard.writeText(t).then(function(){
+      var o = btn.textContent; btn.textContent = 'Copied ✓';
+      setTimeout(function(){ btn.textContent = o; }, 1800);
+    }).catch(function(){ btn.textContent = 'Select the text above to copy'; });
+  });
+</script>
+</body>
+</html>
